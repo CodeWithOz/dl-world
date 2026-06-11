@@ -265,7 +265,9 @@ export function exp(a: Tensor): Tensor {
 /** log with epsilon clamp so log(0) stays finite for teaching-scale models */
 export function log(a: Tensor): Tensor {
   const EPS = 1e-12;
-  return unary(a, "log", (x) => Math.log(Math.max(x, EPS)), (x) => 1 / Math.max(x, EPS));
+  // backward matches the clamped forward: log(max(x, EPS)) is flat below EPS,
+  // so its true derivative there is 0 (not 1/EPS, which would explode)
+  return unary(a, "log", (x) => Math.log(Math.max(x, EPS)), (x) => (x > EPS ? 1 / x : 0));
 }
 
 export function neg(a: Tensor): Tensor {
@@ -433,6 +435,9 @@ export function subCol(a: Tensor, c: Tensor): Tensor {
 export function gatherCols(a: Tensor, idx: Int32Array | number[]): Tensor {
   const [m, n] = [a.rows, a.cols];
   if (idx.length !== m) throw new Error(`gatherCols: idx length ${idx.length} != rows ${m}`);
+  for (let i = 0; i < m; i++)
+    if (!Number.isInteger(idx[i]) || idx[i] < 0 || idx[i] >= n)
+      throw new Error(`gatherCols: idx[${i}] = ${idx[i]} out of range [0, ${n})`);
   const data = new Float32Array(m);
   for (let i = 0; i < m; i++) data[i] = a.data[i * n + idx[i]];
   const t = out(data, [m, 1], "gather", [a]);

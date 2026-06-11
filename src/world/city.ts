@@ -134,6 +134,7 @@ export class City {
       this.drawBuilding(ctx, b, time, world);
     }
 
+    this.drawTourArrows(ctx);
     this.drawDistrictLabels(ctx);
     this.drawLoopPulses(ctx, time, world);
   }
@@ -259,19 +260,31 @@ export class City {
     ctx.fillRect(dx + 4, dy + 2, TILE - 8, TILE - 2);
     ctx.fillStyle = "rgba(255, 226, 130, 0.9)";
     ctx.fillRect(dx + 8, dy + 8, TILE - 16, 6);
-    // sign
+    // sign, with the guided-tour stop number as a gold badge
     const label = `${b.icon} ${b.name}`;
     ctx.font = "bold 12px 'Trebuchet MS', sans-serif";
-    const tw = ctx.measureText(label).width + 14;
+    const badgeR = 8;
+    const textW = ctx.measureText(label).width;
+    const tw = textW + badgeR * 2 + 22;
     const sx = px + w / 2 - tw / 2;
     const sy = py + roofH - 9;
     ctx.fillStyle = "rgba(34, 28, 20, 0.88)";
     this.roundedRect(ctx, sx, sy, tw, 18, 5);
     ctx.fill();
-    ctx.fillStyle = "#f5e9cf";
-    ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.fillText(label, px + w / 2, sy + 9.5);
+    ctx.fillStyle = "#ffd34d";
+    ctx.beginPath();
+    ctx.arc(sx + badgeR + 5, sy + 9, badgeR, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#2a2417";
+    ctx.font = "bold 11px 'Trebuchet MS', sans-serif";
+    ctx.textAlign = "center";
+    ctx.fillText(String(b.tour), sx + badgeR + 5, sy + 9.5);
+    ctx.font = "bold 12px 'Trebuchet MS', sans-serif";
+    ctx.fillStyle = "#f5e9cf";
+    ctx.textAlign = "left";
+    ctx.fillText(label, sx + badgeR * 2 + 14, sy + 9.5);
+    ctx.textAlign = "center";
     // smokestack puffs for the foundry while training
     if (b.id === "foundry" && running) {
       ctx.fillStyle = "rgba(240,240,240,0.5)";
@@ -302,24 +315,54 @@ export class City {
   }
 
   private drawDistrictLabels(ctx: CanvasRenderingContext2D): void {
+    // each label floats on the grass strip above its own building group, so
+    // it never collides with the signs (which sit at the rooflines below)
     ctx.font = "bold 13px 'Trebuchet MS', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(30, 60, 25, 0.45)";
+    ctx.fillStyle = "rgba(30, 60, 25, 0.5)";
     const labels: [string, number, number][] = [
-      ["— DATA QUARTER —", 14, 6.2],
-      ["— FORWARD AVENUE —", 38, 6.2],
-      ["— LOSS DISTRICT —", 55.5, 6.2],
-      ["— GRADIENT ROW —", 47.5, 15.2],
-      ["TRAINING LOOP: data → forward → loss → backward → step", 31, 25],
-      ["— CHAPTER 4 QUARTER —", 13, 24.4],
-      ["— CH. 5 —", 26.5, 24.4],
-      ["— CHAPTER 6 YARDS —", 44.5, 24.4],
+      ["— DATA QUARTER —", 14.5, 6.3],
+      ["— FORWARD AVENUE —", 37, 6.3],
+      ["— LOSS DISTRICT —", 55.5, 6.3],
+      ["— CIVIC CENTER —", 9.5, 15.3],
+      ["— GRADIENT ROW —", 47.5, 15.3],
+      ["— FIRST STEPS QUARTER —", 14, 24.3],
+      ["— TUNING HEIGHTS —", 26.5, 24.3],
+      ["— SIDE QUEST YARDS —", 40, 24.3],
+      ["— DEPLOYMENT DOCK —", 54, 24.3],
     ];
     for (const [text, tx, ty] of labels) ctx.fillText(text, tx * TILE, ty * TILE);
-    // plaza title
+    // plaza title + tour hint
     ctx.font = "bold 22px 'Trebuchet MS', sans-serif";
     ctx.fillStyle = "rgba(90, 70, 30, 0.5)";
     ctx.fillText("⭐ DL WORLD ⭐", 31.5 * TILE, 16.8 * TILE);
+    ctx.font = "bold 12px 'Trebuchet MS', sans-serif";
+    ctx.fillStyle = "rgba(90, 70, 30, 0.65)";
+    ctx.fillText("guided tour: follow the numbered signs ① → ⑮", 31.5 * TILE, 19.8 * TILE);
+  }
+
+  /** subtle chevrons painted on the roads, tracing the tour route */
+  private drawTourArrows(ctx: CanvasRenderingContext2D): void {
+    ctx.fillStyle = "rgba(80, 60, 30, 0.32)";
+    const chevron = (x: number, y: number, dx: number, dy: number) => {
+      const s = 5.5;
+      ctx.beginPath();
+      ctx.moveTo(x + dx * s, y + dy * s);
+      ctx.lineTo(x - dx * s + dy * s, y - dy * s + dx * s);
+      ctx.lineTo(x - dx * s - dy * s, y - dy * s - dx * s);
+      ctx.closePath();
+      ctx.fill();
+    };
+    // stops 1→6: east along the north road
+    for (let x = 6; x <= 59; x += 3) chevron(x * TILE, 14 * TILE, 1, 0);
+    // down the east edge to Gradient Row
+    for (let y = 15.5; y <= 21; y += 2.5) chevron(63 * TILE, y * TILE, 0, 1);
+    // stops 7→9: west along the mid road
+    for (let x = 60; x >= 6; x -= 3) chevron(x * TILE, 23 * TILE, -1, 0);
+    // down the west edge to the south row
+    for (let y = 24.5; y <= 30; y += 2.5) chevron(3 * TILE, y * TILE, 0, 1);
+    // stops 10→15: east along the south road
+    for (let x = 5; x <= 58; x += 3) chevron(x * TILE, 32 * TILE, 1, 0);
   }
 
   /** glowing dots that travel the training loop while the main model trains */

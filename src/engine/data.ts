@@ -60,6 +60,8 @@ export class DataLoader {
   lastBatch: Int32Array = new Int32Array(0);
 
   constructor(n: number, batchSize: number, shuffle = true, seed = 42) {
+    if (!Number.isInteger(batchSize) || batchSize <= 0)
+      throw new Error(`DataLoader: batchSize must be a positive integer, got ${batchSize}`);
     this.indices = new Int32Array(n);
     for (let i = 0; i < n; i++) this.indices[i] = i;
     this.batchSize = batchSize;

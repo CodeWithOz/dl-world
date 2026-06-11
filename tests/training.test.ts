@@ -14,6 +14,9 @@ function loadMnistFromDisk(): MnistData {
   const buf = new Uint8Array(
     readFileSync(join(here, "..", "public", "data", "mnist.bin")),
   );
+  const magic = String.fromCharCode(buf[0], buf[1], buf[2], buf[3]);
+  if (magic !== "DLW1")
+    throw new Error(`Invalid MNIST file magic: expected "DLW1", got "${magic}"`);
   const view = new DataView(buf.buffer, buf.byteOffset);
   const nTrain = view.getUint32(4, true);
   const nTest = view.getUint32(8, true);

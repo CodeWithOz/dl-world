@@ -19,6 +19,8 @@ export interface PanelDef {
 const registry = new Map<string, PanelDef>();
 
 export function registerPanel(id: string, def: PanelDef): void {
+  if (registry.has(id))
+    throw new Error(`registerPanel: duplicate panel id "${id}"`);
   registry.set(id, def);
 }
 
@@ -35,12 +37,23 @@ export function isPanelOpen(): boolean {
 }
 
 export function closePanel(): void {
-  cleanup?.();
-  cleanup = null;
-  overlay?.remove();
-  overlay = null;
-  onCloseCb?.();
-  onCloseCb = null;
+  // a throwing cleanup/callback must never leave the panel half-open
+  try {
+    cleanup?.();
+  } catch (err) {
+    console.error("panel cleanup failed:", err);
+  } finally {
+    cleanup = null;
+    overlay?.remove();
+    overlay = null;
+  }
+  try {
+    onCloseCb?.();
+  } catch (err) {
+    console.error("panel onClose failed:", err);
+  } finally {
+    onCloseCb = null;
+  }
 }
 
 export function openPanel(id: string, world: World, onClose?: () => void): void {
@@ -65,6 +78,13 @@ export function openPanel(id: string, world: World, onClose?: () => void): void 
     if (e.target === overlay) closePanel();
   });
   document.body.append(overlay);
-  const c = def.render(body, world);
-  if (c) cleanup = c;
+  try {
+    const c = def.render(body, world);
+    if (c) cleanup = c;
+  } catch (err) {
+    console.error(`panel "${id}" failed to render:`, err);
+    const msg = el("p", "explain");
+    msg.textContent = "This panel hit an error while rendering — close and reopen it.";
+    body.append(msg);
+  }
 }

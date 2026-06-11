@@ -7,7 +7,7 @@ import { liveRegion, refreshable } from "./common";
 export function registerObservatoryPanels(): void {
   registerPanel("observatory.curves", {
     title: "Curve Wall — is it learning?",
-    subtitle: "Loss is what SGD minimizes; accuracy is what we actually care about (ch.4: metric ≠ loss).",
+    subtitle: "Loss is what SGD minimizes; accuracy is what we actually care about — the loss and the metric are different things on purpose.",
     render(body, world) {
       const [region, cleanup] = liveRegion(world.main, (root) => {
         const s = world.mlp;
@@ -32,7 +32,7 @@ export function registerObservatoryPanels(): void {
           el(
             "p",
             "explain",
-            "Why train on loss but report accuracy? Accuracy barely moves when a weight nudges — its gradient is ~zero almost everywhere, so SGD would get no signal. Cross-entropy is a smooth stand-in that improves accuracy as a side effect (ch.4's key distinction between loss and metric).",
+            "Why train on loss but report accuracy? Accuracy barely moves when a weight nudges — its gradient is ~zero almost everywhere, so SGD would get no signal. Cross-entropy is a smooth stand-in that improves accuracy as a side effect — the essential distinction between a loss and a metric.",
           ),
         );
         root.append(s2);
@@ -91,13 +91,13 @@ export function registerObservatoryPanels(): void {
         s1.append(canvas);
         root.append(s1);
 
-        const s2 = section("The actual mistakes (first 14)", "fastai's plot_top_losses in spirit — always look at the data:");
+        const s2 = section("The actual mistakes (first 14)", "Always look at the data — these are the images the model actually gets wrong:");
         const strip = el("div", "digit-grid");
         let shown = 0;
         for (let i = 0; i < data.nTest && shown < 14; i++) {
           if (preds[i] === data.testLabels[i]) continue;
           const cellEl = el("div", "digit-cell");
-          cellEl.append(digitCanvas(data.testImages, i * 784, 1.8));
+          cellEl.append(digitCanvas(data.testImages, i * 784, 2));
           cellEl.append(el("div", "digit-label neg", `${data.testLabels[i]}→${preds[i]}`));
           strip.append(cellEl);
           shown++;

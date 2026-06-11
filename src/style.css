@@ -19,6 +19,22 @@ body {
   position: fixed;
   inset: 0;
   display: block;
+  touch-action: none;
+}
+
+body {
+  overscroll-behavior: none;
+}
+
+/* keyboard users get a visible focus ring on every control */
+.hud-btn:focus-visible,
+.btn:focus-visible,
+.panel-close:focus-visible,
+.touch-btn:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid #ffd34d;
+  outline-offset: 2px;
 }
 
 .mono {
@@ -663,4 +679,133 @@ input[type="range"] {
 
 .microscope {
   margin-top: 4px;
+}
+
+/* -------------------------------------------------------- touch controls --- */
+
+.touch-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 45;
+}
+
+.touch-btn {
+  pointer-events: auto;
+  background: rgba(16, 19, 28, 0.45);
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  color: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  font-size: 20px;
+  font-family: inherit;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-btn:active {
+  background: rgba(255, 211, 77, 0.4);
+}
+
+.touch-dpad {
+  position: absolute;
+  left: 18px;
+  bottom: 24px;
+  display: grid;
+  grid-template-areas: ". up ." "left . right" ". down .";
+  grid-template-columns: 56px 56px 56px;
+  grid-template-rows: 56px 56px 56px;
+  gap: 4px;
+}
+
+.touch-up { grid-area: up; }
+.touch-left { grid-area: left; }
+.touch-right { grid-area: right; }
+.touch-down { grid-area: down; }
+
+.touch-actions {
+  position: absolute;
+  right: 18px;
+  bottom: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.touch-action {
+  width: 74px;
+  height: 74px;
+  border-radius: 50%;
+  font-size: 26px;
+  font-weight: bold;
+  border-color: rgba(255, 211, 77, 0.6);
+}
+
+.touch-small {
+  font-size: 14px;
+  padding: 10px 14px;
+}
+
+.touch-on {
+  background: rgba(90, 209, 200, 0.45);
+}
+
+/* ----------------------------------------------------------- small screens --- */
+
+@media (max-width: 760px) {
+  .hud {
+    top: 6px;
+    gap: 7px;
+    padding: 6px 10px;
+    max-width: 97vw;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .hud-title,
+  .hud-speed {
+    display: none;
+  }
+
+  .hud-stats {
+    gap: 7px;
+    font-size: 11px;
+  }
+
+  .hud-hint {
+    display: none;
+  }
+
+  .panel {
+    width: 97vw;
+    max-height: 86vh;
+  }
+
+  .panel-body {
+    padding: 10px 12px 18px;
+    overflow-x: auto;
+  }
+
+  .panel-header {
+    padding: 12px 14px 10px;
+  }
+
+  .blurb {
+    max-width: 92vw;
+    bottom: 116px;
+  }
+
+  .prompt {
+    bottom: 156px;
+    font-size: 13px;
+    max-width: 92vw;
+  }
+
+  .welcome-card,
+  .gate-card {
+    max-width: 94vw;
+    padding: 22px 20px;
+  }
 }

@@ -15,7 +15,7 @@ chapters 4–6**.
 
 ```bash
 npm install
-npm run dev        # open http://localhost:5173 (desktop browser)
+npm run dev        # open http://localhost:5173 (desktop or mobile)
 npm test           # engine gradient checks + training smoke tests
 ```
 
@@ -23,9 +23,10 @@ The MNIST subset (`public/data/mnist.bin`, 3,000 train + 600 test) is
 committed; regenerate it with `npm run fetch-mnist`.
 
 **Controls:** WASD / arrows to walk · **E** to enter buildings and inspect
-machines · **Esc** to go back · Shift to run. Press **▶ train** in the top
-bar to set the whole city in motion. On viewports narrower than ~980px the
-city gates close (desktop-only by design; `?nogate` overrides for dev).
+machines · **Esc** to go back · Shift to run. On touch devices an on-screen
+pad appears (with a run/walk toggle). Press **▶ train** in the top bar to
+set the whole city in motion, and follow the numbered signs ① → ⑮ for the
+guided tour through the training loop.
 
 ## The city → curriculum map
 
@@ -36,9 +37,9 @@ city gates close (desktop-only by design; `?nogate` overrides for dev).
 | **Loss District** | Cross-Entropy Foundry | ch.5 — softmax → log → NLL as an **assembly line** with the live batch's numbers at every station; a loss ledger of the currently-confusing images; the Return Belt verifying ∂L/∂logits = (p−y)/B numerically |
 | **Gradient Row** | Backprop Works, Optimizer Depot | ch.4 — the recorded computation graph walked in reverse, one weight's gradient derived by hand against autograd, a finite-difference **Gradient Check Lab**, the SGD update floor with a live lr dial, and a 1-D **loss-landscape slice** |
 | **Civic Center** | Metrics Observatory | ch.4/5 — loss vs metric, live curves, confusion matrix, top losses |
-| **Chapter 4 Quarter** | Pixel Similarity Museum, Linear Cottage | the L1/L2 mean-image baseline, then the 785-parameter 3-vs-7 learner with `mnist_loss` — watch its weights become a picture |
-| **Ch. 5 Heights** | LR Finder Tower | `lr_find()` — sweep a fresh model until the loss explodes |
-| **Chapter 6 Yards** | Multi-Label Workshop, Regression Studio, Inference Gallery | sigmoid+BCE per label, MSE regression to the digit's ink center, and a drawing canvas that runs your handwriting through the model — inference as "the forward pass with frozen weights" |
+| **First Steps Quarter** (ch. 4) | Pixel Similarity Museum, Linear Cottage | the L1/L2 mean-image baseline, then the 785-parameter 3-vs-7 learner with `mnist_loss` — watch its weights become a picture |
+| **Tuning Heights** (ch. 5) | LR Finder Tower | `lr_find()` — sweep a fresh model until the loss explodes |
+| **Side Quest Yards** + **Deployment Dock** (ch. 6) | Multi-Label Workshop, Regression Studio, Inference Gallery | sigmoid+BCE per label, MSE regression to the digit's ink center, and a drawing canvas that runs your handwriting through the model — inference as "the forward pass with frozen weights" |
 
 ## How it works
 

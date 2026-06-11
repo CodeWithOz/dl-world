@@ -33,7 +33,7 @@ export function registerGalleryPanels(): void {
           }
       };
       let painting = false;
-      const paint = (ev: MouseEvent) => {
+      const paint = (ev: PointerEvent) => {
         const rect = pad.getBoundingClientRect();
         const cx = ((ev.clientX - rect.left) / rect.width) * 28;
         const cy = ((ev.clientY - rect.top) / rect.height) * 28;
@@ -48,9 +48,24 @@ export function registerGalleryPanels(): void {
         repaint();
         renderForward();
       };
-      pad.addEventListener("mousedown", (e) => { painting = true; paint(e); });
-      pad.addEventListener("mousemove", (e) => { if (painting) paint(e); });
-      window.addEventListener("mouseup", () => { painting = false; });
+      // pointer events cover mouse, touch and pen; named handlers so the
+      // panel teardown can remove the window-level one (it would otherwise
+      // leak on every open/close)
+      const onPadDown = (e: PointerEvent) => {
+        painting = true;
+        pad.setPointerCapture?.(e.pointerId);
+        paint(e);
+        e.preventDefault();
+      };
+      const onPadMove = (e: PointerEvent) => {
+        if (painting) paint(e);
+      };
+      const onPointerUp = () => {
+        painting = false;
+      };
+      pad.addEventListener("pointerdown", onPadDown);
+      pad.addEventListener("pointermove", onPadMove);
+      window.addEventListener("pointerup", onPointerUp);
       padBox.append(pad);
       const btnRow = el("div", "controls-row");
       btnRow.append(
@@ -104,7 +119,10 @@ export function registerGalleryPanels(): void {
         // throttled implicitly by training speed; cheap single-sample forward
         renderForward();
       });
-      return () => off();
+      return () => {
+        off();
+        window.removeEventListener("pointerup", onPointerUp);
+      };
     },
   });
 

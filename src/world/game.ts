@@ -39,6 +39,11 @@ export class Game {
     window.addEventListener("resize", () => this.resize());
     window.addEventListener("keydown", (e) => this.onKeyDown(e));
     window.addEventListener("keyup", (e) => this.keys.delete(e.key.toLowerCase()));
+    // keyup events are missed while unfocused/hidden — don't let keys stick
+    window.addEventListener("blur", () => this.keys.clear());
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) this.keys.clear();
+    });
     requestAnimationFrame(() => this.frame());
   }
 
@@ -131,7 +136,8 @@ export class Game {
           this.exitBuilding();
       }
     } else {
-      this.keys.clear();
+      // don't clear keys here: keyup still fires globally, and wiping the set
+      // would also kill the touch run-toggle's held "shift"
       this.avatar.moving = false;
     }
 

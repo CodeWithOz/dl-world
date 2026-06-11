@@ -1,4 +1,4 @@
-// Chapter 6 Yards: the Multi-Label Workshop (sigmoid + BCE per label) and
+// Side Quest Yards: the Multi-Label Workshop (sigmoid + BCE per label) and
 // the Regression Studio (predict coordinates with MSE).
 
 import { Tensor } from "../../engine/tensor";
@@ -12,7 +12,7 @@ export function registerCh6Panels(): void {
   registerPanel("workshop.train", {
     title: "Training Bench — multi-label model",
     subtitle:
-      "One image can answer several yes/no questions at once: has a loop? is even? is ≥ 5? (ch.6: like PASCAL images holding several objects).",
+      "One image can answer several yes/no questions at once: has a loop? is even? is ≥ 5? (like a photo that contains several objects at once).",
     render(body, world) {
       const [controls, cleanup] = trainerControls(world.workshop);
       body.append(controls);
@@ -67,7 +67,7 @@ export function registerCh6Panels(): void {
           el(
             "p",
             "explain",
-            "The 0.5 threshold is OUR choice at prediction time, not the model's — ch.6 discusses picking thresholds by validation. Training never thresholds; it works with the smooth probabilities.",
+            "The 0.5 threshold is OUR choice at prediction time, not the model's — a threshold is something you tune on validation data. Training never thresholds; it works with the smooth probabilities.",
           ),
         );
       });
@@ -125,7 +125,7 @@ export function registerCh6Panels(): void {
   // -------------------------------------------------------------- studio ---
   registerPanel("studio.train", {
     title: "Training Bench — regression model",
-    subtitle: "Predict two continuous numbers (the ink's center) instead of a category — ch.6's head-pose idea, browser-sized.",
+    subtitle: "Predict two continuous numbers (the ink's center) instead of a category — regression with the very same network body.",
     render(body, world) {
       const [controls, cleanup] = trainerControls(world.studio);
       body.append(controls);

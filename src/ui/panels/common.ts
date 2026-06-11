@@ -28,8 +28,17 @@ export function liveRegion(
       dirty = true;
     }),
   );
+  // while the user is interacting with a form control inside this region
+  // (e.g. an open <select>), rebuilding the DOM would yank it shut — hold
+  // the update until focus leaves; pickers call the refresh themselves
+  const userIsInteracting = () => {
+    const a = document.activeElement;
+    return (
+      !!a && root.contains(a) && ["SELECT", "INPUT", "TEXTAREA"].includes(a.tagName)
+    );
+  };
   const timer = window.setInterval(() => {
-    if (!dirty) return;
+    if (!dirty || userIsInteracting()) return;
     const now = performance.now();
     if (now - last < intervalMs) return;
     last = now;

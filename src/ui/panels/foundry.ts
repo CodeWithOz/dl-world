@@ -124,14 +124,21 @@ export function registerFoundryPanels(): void {
           "<thead><tr><th>image</th><th>true</th><th>model's top guess</th><th>p(true class)</th><th>−log p = loss</th></tr></thead>";
         const tb = el("tbody");
         for (const i of order.slice(0, 12)) {
+          // build cells as DOM nodes — `innerHTML +=` would re-serialize the
+          // row and wipe the canvas thumbnail's bitmap
           const tr = el("tr");
           const tdImg = el("td");
-          tdImg.append(digitCanvas(world.data.trainImages, batch[i] * 784, 1.4));
+          tdImg.append(digitCanvas(world.data.trainImages, batch[i] * 784, 2));
           const p = rowOf(soft, i);
           let guess = 0;
           for (let j = 1; j < 10; j++) if (p[j] > p[guess]) guess = j;
-          tr.append(tdImg);
-          tr.innerHTML += `<td>${targets[i]}</td><td class="${guess === targets[i] ? "pos" : "neg"}">${guess} (${fmt(p[guess] * 100, 1)}%)</td><td>${fmt(p[targets[i]] * 100, 2)}%</td><td>${fmt(nll.at(i, 0), 4)}</td>`;
+          tr.append(
+            tdImg,
+            el("td", "", String(targets[i])),
+            el("td", guess === targets[i] ? "pos" : "neg", `${guess} (${fmt(p[guess] * 100, 1)}%)`),
+            el("td", "", `${fmt(p[targets[i]] * 100, 2)}%`),
+            el("td", "", fmt(nll.at(i, 0), 4)),
+          );
           tb.append(tr);
         }
         table.append(tb);

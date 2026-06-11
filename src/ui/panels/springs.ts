@@ -177,7 +177,7 @@ export function registerSpringPanels(): void {
         el(
           "p",
           "explain",
-          "This is the universal approximation insight from ch.4: linear layers + nonlinearities can approximate any function, given enough hidden units. The mills do the heavy arithmetic; this little spring is what makes depth meaningful.",
+          "This is the universal approximation insight: linear layers + nonlinearities can approximate any function, given enough hidden units. The mills do the heavy arithmetic; this little spring is what makes depth meaningful.",
         ),
       );
       body.append(s2);

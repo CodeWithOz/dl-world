@@ -148,6 +148,9 @@ export function digitCanvas(
   offset = 0,
   scale = 3,
 ): HTMLCanvasElement {
+  // fractional scales would compute fractional ImageData offsets, whose
+  // writes are silently dropped — coerce to a whole number of pixels
+  scale = Math.max(1, Math.round(scale));
   const canvas = document.createElement("canvas");
   canvas.width = 28 * scale;
   canvas.height = 28 * scale;
@@ -251,7 +254,7 @@ export function lineChart(
   }
   const tx = (x: number) => (opts.logX ? Math.log10(Math.max(x, 1e-12)) : x);
   const all = [...points, ...(opts.series2 ?? [])];
-  const xs = points.map((p) => tx(p.x));
+  const xs = all.map((p) => tx(p.x));
   const xmin = Math.min(...xs);
   const xmax = Math.max(...xs);
   let ymin = Math.min(...all.map((p) => p.y));

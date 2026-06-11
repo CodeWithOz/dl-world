@@ -73,11 +73,14 @@ export class Avatar {
     ctx.fill();
     ctx.strokeStyle = "rgba(0,0,0,0.2)";
     ctx.stroke();
-    // head
-    ctx.fillStyle = "#e8b88a";
+    // head — deliberately a playful mint (matches the city's accent color),
+    // not any real human skin tone
+    ctx.fillStyle = "#7fd8c6";
     ctx.beginPath();
     ctx.arc(x, y - 14 + bob, 7.5, 0, Math.PI * 2);
     ctx.fill();
+    ctx.strokeStyle = "rgba(20, 60, 55, 0.35)";
+    ctx.stroke();
     // hard hat
     ctx.fillStyle = "#f2c33d";
     ctx.beginPath();

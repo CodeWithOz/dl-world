@@ -15,6 +15,8 @@ export interface BuildingDef {
   id: string;
   name: string;
   district: string;
+  /** stop number on the guided tour (shown as a badge on the sign) */
+  tour: number;
   icon: string;
   /** footprint in city tiles */
   x: number;
@@ -54,6 +56,7 @@ export const BUILDINGS: BuildingDef[] = [
     id: "warehouse",
     name: "Dataset Warehouse",
     district: "Data Quarter",
+    tour: 1,
     icon: "📦",
     x: 6, y: 7, w: 8, h: 6,
     color: "#c9a36a", roof: "#9a7544",
@@ -68,6 +71,7 @@ export const BUILDINGS: BuildingDef[] = [
     id: "depot",
     name: "Batch Depot",
     district: "Data Quarter",
+    tour: 2,
     icon: "🚉",
     x: 16, y: 7, w: 7, h: 6,
     color: "#b9b3a4", roof: "#82796a",
@@ -83,6 +87,7 @@ export const BUILDINGS: BuildingDef[] = [
     id: "mill1",
     name: "Linear Mill №1",
     district: "Forward Avenue",
+    tour: 3,
     icon: "⚙️",
     x: 25, y: 7, w: 7, h: 6,
     color: "#8fb4d9", roof: "#5a7fa6",
@@ -98,6 +103,7 @@ export const BUILDINGS: BuildingDef[] = [
     id: "springs",
     name: "Activation Springs",
     district: "Forward Avenue",
+    tour: 4,
     icon: "⛲",
     x: 34, y: 7, w: 6, h: 6,
     color: "#7ecfc4", roof: "#4a9a90",
@@ -113,6 +119,7 @@ export const BUILDINGS: BuildingDef[] = [
     id: "mill2",
     name: "Linear Mill №2",
     district: "Forward Avenue",
+    tour: 5,
     icon: "⚙️",
     x: 42, y: 7, w: 7, h: 6,
     color: "#8fb4d9", roof: "#5a7fa6",
@@ -129,6 +136,7 @@ export const BUILDINGS: BuildingDef[] = [
     id: "foundry",
     name: "Cross-Entropy Foundry",
     district: "Loss District",
+    tour: 6,
     icon: "🏭",
     x: 51, y: 7, w: 9, h: 6,
     color: "#d98f8f", roof: "#a65a5a",
@@ -145,6 +153,7 @@ export const BUILDINGS: BuildingDef[] = [
     id: "backprop",
     name: "Backprop Works",
     district: "Gradient Row",
+    tour: 7,
     icon: "🔧",
     x: 48, y: 16, w: 8, h: 6,
     color: "#b48fd9", roof: "#7e5aa6",
@@ -160,6 +169,7 @@ export const BUILDINGS: BuildingDef[] = [
     id: "optim",
     name: "Optimizer Depot",
     district: "Gradient Row",
+    tour: 8,
     icon: "🔩",
     x: 39, y: 16, w: 7, h: 6,
     color: "#d9c08f", roof: "#a68a5a",
@@ -174,6 +184,7 @@ export const BUILDINGS: BuildingDef[] = [
     id: "observatory",
     name: "Metrics Observatory",
     district: "Civic Center",
+    tour: 9,
     icon: "🔭",
     x: 6, y: 16, w: 7, h: 6,
     color: "#9fb6c9", roof: "#5e7d96",
@@ -188,7 +199,8 @@ export const BUILDINGS: BuildingDef[] = [
   {
     id: "museum",
     name: "Pixel Similarity Museum",
-    district: "Chapter 4 Quarter",
+    district: "First Steps Quarter",
+    tour: 10,
     icon: "🏛",
     x: 6, y: 25, w: 7, h: 6,
     color: "#cfc4ae", roof: "#9c917b",
@@ -202,12 +214,13 @@ export const BUILDINGS: BuildingDef[] = [
   {
     id: "cottage",
     name: "Linear Cottage",
-    district: "Chapter 4 Quarter",
+    district: "First Steps Quarter",
+    tour: 11,
     icon: "🏡",
     x: 15, y: 25, w: 7, h: 6,
     color: "#a8c98f", roof: "#6f9655",
     trainer: "cottage",
-    blurb: "Ch.4's first learner: one weight per pixel decides — 3 or 7? Watch SGD shape it.",
+    blurb: "The first real learner: one weight per pixel decides — 3 or 7? Watch SGD shape it.",
     interior: room(16, 10, [
       { id: "cottage.train", name: "Training Bench", icon: "🎛" },
       { id: "cottage.eye", name: "The Learned Eye", icon: "👁" },
@@ -217,12 +230,13 @@ export const BUILDINGS: BuildingDef[] = [
   {
     id: "tower",
     name: "LR Finder Tower",
-    district: "Chapter 5 Heights",
+    district: "Tuning Heights",
+    tour: 12,
     icon: "🗼",
-    x: 24, y: 23, w: 5, h: 8,
+    x: 24, y: 25, w: 5, h: 6,
     color: "#c9a3c4", roof: "#96678f",
     trainer: null,
-    blurb: "Ch.5's learning-rate finder: sweep the LR upward until the loss explodes; pick the steep part.",
+    blurb: "The learning-rate finder: sweep the LR upward until the loss explodes; pick the steep part.",
     interior: room(14, 10, [
       { id: "tower.sweep", name: "The Sweep Console", icon: "🎚" },
     ]),
@@ -231,12 +245,13 @@ export const BUILDINGS: BuildingDef[] = [
   {
     id: "workshop",
     name: "Multi-Label Workshop",
-    district: "Chapter 6 Yards",
+    district: "Side Quest Yards",
+    tour: 13,
     icon: "🏷",
     x: 32, y: 25, w: 7, h: 6,
     color: "#d9a98f", roof: "#a6735a",
     trainer: "workshop",
-    blurb: "Ch.6: several yes/no questions per image — sigmoid + binary cross-entropy per label.",
+    blurb: "Several yes/no questions per image at once — sigmoid + binary cross-entropy per label.",
     interior: room(16, 10, [
       { id: "workshop.train", name: "Training Bench", icon: "🎛" },
       { id: "workshop.labels", name: "Label Wall", icon: "🏷" },
@@ -246,12 +261,13 @@ export const BUILDINGS: BuildingDef[] = [
   {
     id: "studio",
     name: "Regression Studio",
-    district: "Chapter 6 Yards",
+    district: "Side Quest Yards",
+    tour: 14,
     icon: "🎯",
     x: 41, y: 25, w: 7, h: 6,
     color: "#8fd9b0", roof: "#5aa67e",
     trainer: "studio",
-    blurb: "Ch.6: predict numbers, not categories — find the digit's center of ink with MSE loss.",
+    blurb: "Predict numbers, not categories — find the digit's center of ink with MSE loss.",
     interior: room(16, 10, [
       { id: "studio.train", name: "Training Bench", icon: "🎛" },
       { id: "studio.preds", name: "Crosshair Desk", icon: "🎯" },
@@ -260,7 +276,8 @@ export const BUILDINGS: BuildingDef[] = [
   {
     id: "gallery",
     name: "Inference Gallery",
-    district: "Chapter 6 Yards",
+    district: "Deployment Dock",
+    tour: 15,
     icon: "🖌",
     x: 50, y: 25, w: 8, h: 6,
     color: "#e0d08a", roof: "#b09a45",

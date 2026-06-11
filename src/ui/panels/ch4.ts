@@ -1,4 +1,4 @@
-// Chapter 4 Quarter: the Pixel Similarity Museum (the pre-learning baseline)
+// First Steps Quarter: the Pixel Similarity Museum (the pre-learning baseline)
 // and the Linear Cottage (the first real learner, 3 vs 7).
 
 import { imageAsFloats } from "../../engine/data";
@@ -10,7 +10,7 @@ import { liveRegion, picker, trainerControls } from "./common";
 export function registerCh4Panels(): void {
   registerPanel("museum.means", {
     title: "Hall of Averages — the 'ideal' 3 and 7",
-    subtitle: "Before any learning: stack every training 3 (and 7) and average the pixels. Ch.4's first classifier.",
+    subtitle: "Before any learning: stack every training 3 (and 7) and average the pixels — a classifier with no learning at all.",
     render(body, world) {
       const r = pixelSimilarityBaseline(world.data);
       const s = section("The exhibits");
@@ -39,7 +39,7 @@ export function registerCh4Panels(): void {
         el(
           "p",
           "explain",
-          "Surprisingly strong! This is the baseline the Linear Cottage next door must beat — fastai's advice: always start with a dumb baseline so you know your fancy model is actually earning its keep.",
+          "Surprisingly strong! This is the baseline the Linear Cottage next door must beat — the golden rule: always start with a dumb baseline so you know your fancy model is actually earning its keep.",
         ),
       );
     },
@@ -84,7 +84,7 @@ export function registerCh4Panels(): void {
         wrap.append(row);
         wrap.append(
           el("div", "bigmath", `verdict: closer to the ideal <b>${verdict}</b> → ${verdict === truth ? '<span class="pos">correct ✓</span>' : '<span class="neg">wrong ✗</span>'}`),
-          el("p", "explain", "L1 vs L2 (ch.4): L2 punishes big single-pixel differences harder; L1 treats all differences evenly. Both are legitimate 'distances' — choosing one is a modeling decision."),
+          el("p", "explain", "L1 vs L2: L2 punishes big single-pixel differences harder; L1 treats all differences evenly. Both are legitimate 'distances' — choosing one is a modeling decision."),
         );
       };
       render();
@@ -94,7 +94,7 @@ export function registerCh4Panels(): void {
 
   registerPanel("cottage.train", {
     title: "Training Bench — the 3-vs-7 linear learner",
-    subtitle: "784 weights + 1 bias, sigmoid, mnist_loss, SGD — chapter 4's complete learner, training live in your browser.",
+    subtitle: "784 weights + 1 bias, sigmoid, mnist_loss, SGD — a complete learner from first principles, training live in your browser.",
     render(body, world) {
       const [controls, cleanup] = trainerControls(world.cottage);
       body.append(controls);
@@ -102,7 +102,7 @@ export function registerCh4Panels(): void {
         el(
           "p",
           "explain",
-          "The seven steps of ch.4 are all here: init → predict → loss → gradient → step → repeat → stop. Open The Learned Eye next to this bench while it trains and watch the weights become a picture. The pixel museum's baseline was ~94% — can this learner beat it?",
+          "The seven steps of training are all here: init → predict → loss → gradient → step → repeat → stop. Open The Learned Eye next to this bench while it trains and watch the weights become a picture. The pixel museum's baseline was ~94% — can this learner beat it?",
         ),
       );
       return cleanup;
@@ -146,7 +146,7 @@ export function registerCh4Panels(): void {
 
   registerPanel("cottage.loss", {
     title: "mnist_loss Corner — where(y==1, 1−p, p)",
-    subtitle: "Chapter 4's hand-rolled loss, computed live on the cottage's current batch.",
+    subtitle: "The hand-rolled loss, computed live on the cottage's current batch.",
     render(body, world) {
       const [region, cleanup] = liveRegion(world.cottage, (root) => {
         const s = world.lin37;
@@ -166,11 +166,17 @@ export function registerCh4Panels(): void {
         table.innerHTML = `<thead><tr><th>image</th><th>y</th><th>score x·w+b</th><th>p = σ(score)</th><th>where(y==1, 1−p, p)</th></tr></thead>`;
         const tb = el("tbody");
         for (let i = 0; i < Math.min(8, preds.rows); i++) {
+          // DOM nodes, not `innerHTML +=` — re-serializing wipes the canvas
           const tr = el("tr");
           const td = el("td");
-          td.append(digitCanvas(world.data.trainImages, batchIdx[i] * 784, 1.3));
-          tr.append(td);
-          tr.innerHTML += `<td>${y.at(i, 0)}</td><td>${fmt(preds.at(i, 0))}</td><td>${fmt(sig.at(i, 0))}</td><td class="${per.at(i, 0) < 0.2 ? "pos" : "neg"}">${fmt(per.at(i, 0))}</td>`;
+          td.append(digitCanvas(world.data.trainImages, batchIdx[i] * 784, 2));
+          tr.append(
+            td,
+            el("td", "", String(y.at(i, 0))),
+            el("td", "", fmt(preds.at(i, 0))),
+            el("td", "", fmt(sig.at(i, 0))),
+            el("td", per.at(i, 0) < 0.2 ? "pos" : "neg", fmt(per.at(i, 0))),
+          );
           tb.append(tr);
         }
         table.append(tb);
@@ -180,7 +186,7 @@ export function registerCh4Panels(): void {
 
         const s2 = section(
           "Why not just use accuracy as the loss?",
-          "Accuracy only changes when a prediction crosses 0.5 — nudge a weight slightly and accuracy stays identical, so its gradient is zero almost everywhere and SGD gets no signal. mnist_loss rewards every tiny improvement in confidence, giving a usable slope. (Ch.4's loss-vs-metric lesson, the same reason the foundry uses cross-entropy.)",
+          "Accuracy only changes when a prediction crosses 0.5 — nudge a weight slightly and accuracy stays identical, so its gradient is zero almost everywhere and SGD gets no signal. mnist_loss rewards every tiny improvement in confidence, giving a usable slope. (The same loss-vs-metric reasoning is why the foundry uses cross-entropy.)",
         );
         root.append(s2);
       });

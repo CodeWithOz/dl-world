@@ -8,7 +8,7 @@ import { liveRegion, picker } from "./common";
 export function registerOptimPanels(): void {
   registerPanel("optim.sgd", {
     title: "The Update Floor — w ← w − lr · gradient",
-    subtitle: "The entire learning rule of chapter 4. Everything else in the city exists to compute the `gradient` in this line.",
+    subtitle: "The entire learning rule. Everything else in the city exists to compute the `gradient` in this line.",
     render(body, world) {
       let paramIdx = 0;
       const lrRow = el("div", "controls-row");
@@ -65,7 +65,7 @@ export function registerOptimPanels(): void {
           el(
             "p",
             "explain",
-            "Push the learning rate to ~5 and watch the Observatory: the loss will bounce or explode because each step overshoots the valley. Drop it to 0.001 and learning slows to a crawl. Ch.5's LR Finder Tower automates finding the sweet spot.",
+            "Push the learning rate to ~5 and watch the Observatory: the loss will bounce or explode because each step overshoots the valley. Drop it to 0.001 and learning slows to a crawl. The LR Finder Tower automates finding the sweet spot.",
           ),
         );
         root.append(s);

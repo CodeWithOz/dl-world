@@ -40,7 +40,7 @@ export function registerDataPanels(): void {
         const data = world.data;
         const top = section(
           "Open crate",
-          "An image is not a picture to the model — it is a 28×28 grid of numbers (0 = blank paper, 255 = full ink). This is the single most important idea in chapter 4.",
+          "An image is not a picture to the model — it is a 28×28 grid of numbers (0 = blank paper, 255 = full ink). This is the single most important idea in the whole city.",
         );
         const detail = el("div", "hstack");
         const left = el("div", "vstack");
@@ -56,7 +56,7 @@ export function registerDataPanels(): void {
         const wrap = el("div", "digit-grid");
         for (let i = 0; i < 96; i++) {
           const cell = el("div", `digit-cell${i === selected ? " digit-cell-sel" : ""}`);
-          cell.append(digitCanvas(data.trainImages, i * 784, 1.6));
+          cell.append(digitCanvas(data.trainImages, i * 784, 2));
           cell.append(el("div", "digit-label", String(data.trainLabels[i])));
           cell.addEventListener("click", () => {
             selected = i;
@@ -180,7 +180,7 @@ export function registerDataPanels(): void {
         const batch = s.lastBatch;
         for (let i = 0; i < Math.min(batch.length, 16); i++) {
           const cell = el("div", "digit-cell");
-          cell.append(digitCanvas(world.data.trainImages, batch[i] * 784, 1.6));
+          cell.append(digitCanvas(world.data.trainImages, batch[i] * 784, 2));
           cell.append(el("div", "digit-label", String(world.data.trainLabels[batch[i]])));
           strip.append(cell);
         }

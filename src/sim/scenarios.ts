@@ -64,7 +64,6 @@ export function inkCenter(images: Uint8Array, i: number): [number, number] {
 export abstract class Scenario {
   abstract readonly id: ScenarioId;
   abstract readonly title: string;
-  abstract readonly chapter: string;
   abstract readonly metricName: string;
 
   data: MnistData;
@@ -157,7 +156,6 @@ export abstract class Scenario {
 export class Mlp10 extends Scenario {
   readonly id = "mlp10" as const;
   readonly title = "Digit Classifier (2-layer net)";
-  readonly chapter = "ch. 4-5";
   readonly metricName = "test accuracy";
   readonly hidden = 64;
   w1: Tensor;
@@ -250,7 +248,6 @@ export class Mlp10 extends Scenario {
 export class Linear37 extends Scenario {
   readonly id = "linear37" as const;
   readonly title = "Is it a 3 or a 7? (linear model)";
-  readonly chapter = "ch. 4";
   readonly metricName = "test accuracy";
   w: Tensor;
   b: Tensor;
@@ -314,7 +311,6 @@ export class Linear37 extends Scenario {
 export class MultiLabel extends Scenario {
   readonly id = "multilabel" as const;
   readonly title = "Digit Properties (multi-label)";
-  readonly chapter = "ch. 6";
   readonly metricName = "label accuracy";
   readonly hidden = 48;
   w1: Tensor;
@@ -377,7 +373,6 @@ export class MultiLabel extends Scenario {
 export class Regression extends Scenario {
   readonly id = "regression" as const;
   readonly title = "Ink Center Finder (regression)";
-  readonly chapter = "ch. 6";
   readonly metricName = "avg error (px)";
   readonly hidden = 48;
   w1: Tensor;
