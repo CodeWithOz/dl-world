@@ -17,14 +17,17 @@ export function mountTouchControls(game: Game): void {
 
   // ---- D-pad (writes w/a/s/d into the game's key set)
   const dpad = el("div", "touch-dpad");
-  const dirs: [string, string, string][] = [
-    ["▲", "w", "touch-up"],
-    ["◀", "a", "touch-left"],
-    ["▶", "d", "touch-right"],
-    ["▼", "s", "touch-down"],
+  // one glyph, CSS-rotated per direction: identical rendering on every
+  // platform, and U+25B2 has no emoji variant (unlike ◀/▶, which iOS
+  // would render as blue emoji arrows)
+  const dirs: [string, string][] = [
+    ["w", "touch-up"],
+    ["a", "touch-left"],
+    ["d", "touch-right"],
+    ["s", "touch-down"],
   ];
-  for (const [glyph, key, cls] of dirs) {
-    const b = el("button", `touch-btn ${cls}`, glyph);
+  for (const [key, cls] of dirs) {
+    const b = el("button", `touch-btn ${cls}`, "▲");
     const press = (e: Event) => {
       game.keys.add(key);
       e.preventDefault();

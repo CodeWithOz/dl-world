@@ -17,7 +17,7 @@ export class Game {
   ctx: CanvasRenderingContext2D;
   world: World;
   city = new City();
-  avatar = new Avatar(31.5 * TILE, 20.5 * TILE);
+  avatar = new Avatar(31.5 * TILE, 21.5 * TILE);
   scene: Scene = { kind: "city" };
   keys = new Set<string>();
   promptEl: HTMLElement;
@@ -168,8 +168,16 @@ export class Game {
       ctx.fillRect(0, 0, vw, vh);
       const roomW = interior.w * TILE;
       const roomH = interior.h * TILE;
-      const ox = (vw - roomW) / 2;
-      const oy = (vh - roomH) / 2;
+      // center the room when it fits; otherwise clamp-follow the avatar,
+      // the same camera behavior as the street view (small screens)
+      const ox =
+        roomW <= vw
+          ? (vw - roomW) / 2
+          : -Math.max(0, Math.min(this.avatar.x - vw / 2, roomW - vw));
+      const oy =
+        roomH <= vh
+          ? (vh - roomH) / 2
+          : -Math.max(0, Math.min(this.avatar.y - vh / 2, roomH - vh));
       ctx.save();
       ctx.translate(ox, oy);
       const near = interior.stationNear(this.avatar.x, this.avatar.y);

@@ -9,6 +9,11 @@ import { registerCh4Panels } from "./ch4";
 import { registerTowerPanels } from "./tower";
 import { registerCh6Panels } from "./ch6";
 import { registerGalleryPanels } from "./gallery";
+import { registerRefineryPanels } from "./refinery";
+import { registerCollabPanels } from "./collab";
+import { registerArborPanels } from "./arbor";
+import { registerLanguagePanels } from "./language";
+import { registerEchoPanels } from "./echo";
 
 export function registerAllPanels(): void {
   registerDataPanels();
@@ -22,4 +27,10 @@ export function registerAllPanels(): void {
   registerTowerPanels();
   registerCh6Panels();
   registerGalleryPanels();
+  // the frontier
+  registerRefineryPanels();
+  registerCollabPanels();
+  registerArborPanels();
+  registerLanguagePanels();
+  registerEchoPanels();
 }

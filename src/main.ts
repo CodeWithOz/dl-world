@@ -29,15 +29,18 @@ function welcome(onStart: () => void): void {
       <p>A real two-layer neural network is training on real MNIST digits in your
       browser right now — and this city <i>is</i> that computation. Every building
       opens up one piece of it, all the way down to single multiply-adds.</p>
-      <p><b>For the guided route, follow the numbered signs ① → ⑮</b> — they trace
+      <p><b>For the guided route, follow the numbered signs ① → ㉑</b> — they trace
       the full story: data → forward pass → loss → backprop → optimizer → metrics,
       then the historical baselines, learning-rate tuning, other kinds of targets,
-      and finally inference, where you draw digits for the trained model to read.
+      and inference, where you draw digits for the trained model to read.
+      Then cross the river south into <b>the Frontier</b>, where the data stops being
+      images: training tricks, movie-taste embeddings, decision-tree forests, text
+      pipelines and a tiny language model — all training live too.
       Or ignore the numbers and wander — every door is open.</p>
       <p><b>Keyboard:</b> WASD / arrows to walk · <b>E</b> to enter &amp; inspect ·
       <b>Esc</b> to go back · Shift to run.<br>
       <b>Touch:</b> use the on-screen pad and buttons.</p>
-      <p>Press <b>▶ train</b> in the top bar and the whole city comes alive.
+      <p>Press <b>▶&#xFE0E; train</b> in the top bar and the whole city comes alive.
       Every number on every panel is live — nothing is canned.</p>
       <button class="btn btn-play welcome-btn">step into the city →</button>
     </div>`;

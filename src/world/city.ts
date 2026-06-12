@@ -7,7 +7,51 @@ import { mulberry32 } from "../engine/data";
 
 export const TILE = 32;
 export const MAP_W = 66;
-export const MAP_H = 38;
+export const MAP_H = 65;
+
+/**
+ * District lawn signs: dark placards on posts, planted on the grass strip
+ * above each building group. Coordinates are tile-centers; `generate()`
+ * keeps trees/flowers out of each sign's footprint so the text stays
+ * readable against the board (not the greenery).
+ */
+interface SignDef {
+  text: string;
+  x: number;
+  y: number;
+  big?: boolean;
+}
+
+const DISTRICT_SIGNS: SignDef[] = [
+  // old town
+  { text: "DATA QUARTER", x: 14.5, y: 5.1 },
+  { text: "FORWARD AVENUE", x: 37, y: 5.1 },
+  { text: "LOSS DISTRICT", x: 55.5, y: 5.1 },
+  { text: "CIVIC CENTER", x: 9.5, y: 16.4 },
+  { text: "GRADIENT ROW", x: 47.5, y: 16.4 },
+  { text: "FIRST STEPS QUARTER", x: 14, y: 27.4 },
+  { text: "TUNING HEIGHTS", x: 26.5, y: 27.4 },
+  { text: "SIDE QUEST YARDS", x: 40, y: 27.4 },
+  { text: "DEPLOYMENT DOCK", x: 54, y: 27.4 },
+  // the frontier (beyond the river: words, tables & taste)
+  { text: "THE FRONTIER — BEYOND IMAGES", x: 31.5, y: 37.6, big: true },
+  { text: "TABLE GROVE", x: 10, y: 42.5 },
+  { text: "TASTE QUARTER", x: 26, y: 42.5 },
+  { text: "REFINEMENT ROW", x: 46, y: 42.5 },
+  { text: "LANGUAGE LANE", x: 19, y: 53.5 },
+  { text: "SEQUENCE SUMMIT", x: 47.5, y: 53.5 },
+];
+
+/** rough tile footprint of a sign (board + posts), for decor clearing */
+function signZone(s: SignDef): { x0: number; x1: number; y0: number; y1: number } {
+  const halfTiles = Math.ceil(((s.text.length * (s.big ? 9 : 7.5)) / 2 + 20) / TILE);
+  return {
+    x0: Math.floor(s.x - halfTiles),
+    x1: Math.ceil(s.x + halfTiles),
+    y0: Math.floor(s.y - 0.7),
+    y1: Math.floor(s.y + 0.7),
+  };
+}
 
 const enum T {
   Grass = 0,
@@ -47,19 +91,25 @@ export class City {
   }
 
   private generate(): void {
-    // roads
+    // horizontal roads — old town (3) and the frontier (2)
     this.rect(2, 13, MAP_W - 4, 2, T.Road);
-    this.rect(2, 22, MAP_W - 4, 2, T.Road);
-    this.rect(2, 31, MAP_W - 4, 2, T.Road);
-    this.rect(2, 13, 2, 20, T.Road);
-    this.rect(MAP_W - 4, 13, 2, 20, T.Road);
-    this.rect(30, 13, 2, 20, T.Road);
+    this.rect(2, 24, MAP_W - 4, 2, T.Road);
+    this.rect(2, 35, MAP_W - 4, 2, T.Road);
+    this.rect(2, 50, MAP_W - 4, 2, T.Road);
+    this.rect(2, 61, MAP_W - 4, 2, T.Road);
+    // vertical roads run the whole city, old town through the frontier
+    this.rect(2, 13, 2, 50, T.Road);
+    this.rect(MAP_W - 4, 13, 2, 50, T.Road);
+    this.rect(30, 13, 2, 50, T.Road);
     // plaza + fountain
-    this.rect(26, 16, 11, 6, T.Plaza);
-    this.rect(31, 17, 2, 2, T.Fountain);
-    // pond (bottom left)
-    this.rect(13, 34, 8, 3, T.Water);
-    this.rect(14, 33, 6, 1, T.Water);
+    this.rect(26, 18, 11, 6, T.Plaza);
+    this.rect(31, 19, 2, 2, T.Fountain);
+    // the river that separates old town (images) from the frontier
+    // (words, tables & taste) — crossable on the three road bridges
+    this.rect(2, 39, MAP_W - 4, 2, T.Water);
+    this.rect(2, 39, 2, 2, T.Road);
+    this.rect(30, 39, 2, 2, T.Road);
+    this.rect(MAP_W - 4, 39, 2, 2, T.Road);
     // buildings (door punched into bottom wall)
     BUILDINGS.forEach((b, i) => {
       this.rect(b.x, b.y, b.w, b.h, T.Building, i);
@@ -86,11 +136,15 @@ export class City {
       this.set(MAP_W - 1, y, T.Tree);
       if (rand() < 0.7) this.set(MAP_W - 2, y, T.Tree);
     }
-    for (let i = 0; i < 240; i++) {
+    const zones = DISTRICT_SIGNS.map(signZone);
+    const inSignZone = (x: number, y: number) =>
+      zones.some((z) => x >= z.x0 && x <= z.x1 && y >= z.y0 && y <= z.y1);
+    for (let i = 0; i < 380; i++) {
       const x = 2 + Math.floor(rand() * (MAP_W - 4));
       const y = 2 + Math.floor(rand() * (MAP_H - 4));
       if (this.get(x, y) !== T.Grass) continue;
-      // keep walking corridors near roads clear
+      // keep walking corridors near roads — and every sign's footprint — clear
+      if (inSignZone(x, y)) continue;
       this.set(x, y, rand() < 0.35 ? T.Tree : T.Flower);
     }
   }
@@ -314,31 +368,46 @@ export class City {
     ctx.closePath();
   }
 
+  /** lawn-sign placards: bright text on a dark board so district names stay
+   *  readable against grass and trees */
   private drawDistrictLabels(ctx: CanvasRenderingContext2D): void {
-    // each label floats on the grass strip above its own building group, so
-    // it never collides with the signs (which sit at the rooflines below)
-    ctx.font = "bold 13px 'Trebuchet MS', sans-serif";
     ctx.textAlign = "center";
-    ctx.fillStyle = "rgba(30, 60, 25, 0.5)";
-    const labels: [string, number, number][] = [
-      ["— DATA QUARTER —", 14.5, 6.3],
-      ["— FORWARD AVENUE —", 37, 6.3],
-      ["— LOSS DISTRICT —", 55.5, 6.3],
-      ["— CIVIC CENTER —", 9.5, 15.3],
-      ["— GRADIENT ROW —", 47.5, 15.3],
-      ["— FIRST STEPS QUARTER —", 14, 24.3],
-      ["— TUNING HEIGHTS —", 26.5, 24.3],
-      ["— SIDE QUEST YARDS —", 40, 24.3],
-      ["— DEPLOYMENT DOCK —", 54, 24.3],
-    ];
-    for (const [text, tx, ty] of labels) ctx.fillText(text, tx * TILE, ty * TILE);
+    ctx.textBaseline = "middle";
+    for (const s of DISTRICT_SIGNS) {
+      ctx.font = `bold ${s.big ? 15 : 12.5}px 'Trebuchet MS', sans-serif`;
+      const tw = ctx.measureText(s.text).width;
+      const w = tw + 26;
+      const h = s.big ? 28 : 22;
+      const cx = s.x * TILE;
+      const cy = s.y * TILE;
+      const x = cx - w / 2;
+      const y = cy - h / 2;
+      // wooden posts
+      ctx.fillStyle = "#6b4a2f";
+      ctx.fillRect(x + 8, y + h - 2, 5, 13);
+      ctx.fillRect(x + w - 13, y + h - 2, 5, 13);
+      // drop shadow, then the board
+      ctx.fillStyle = "rgba(0, 0, 0, 0.28)";
+      this.roundedRect(ctx, x + 2, y + 3, w, h, 6);
+      ctx.fill();
+      ctx.fillStyle = s.big ? "#27345e" : "#1d3357";
+      this.roundedRect(ctx, x, y, w, h, 6);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 211, 77, 0.85)";
+      ctx.lineWidth = 1.5;
+      this.roundedRect(ctx, x + 2, y + 2, w - 4, h - 4, 4);
+      ctx.stroke();
+      ctx.fillStyle = "#ffe44d";
+      ctx.fillText(s.text, cx, cy + 1);
+    }
+    ctx.textBaseline = "alphabetic";
     // plaza title + tour hint
     ctx.font = "bold 22px 'Trebuchet MS', sans-serif";
     ctx.fillStyle = "rgba(90, 70, 30, 0.5)";
-    ctx.fillText("⭐ DL WORLD ⭐", 31.5 * TILE, 16.8 * TILE);
+    ctx.fillText("⭐ DL WORLD ⭐", 31.5 * TILE, 18.9 * TILE);
     ctx.font = "bold 12px 'Trebuchet MS', sans-serif";
     ctx.fillStyle = "rgba(90, 70, 30, 0.65)";
-    ctx.fillText("guided tour: follow the numbered signs ① → ⑮", 31.5 * TILE, 19.8 * TILE);
+    ctx.fillText("guided tour: follow the numbered signs ① → ㉑", 31.5 * TILE, 22.6 * TILE);
   }
 
   /** subtle chevrons painted on the roads, tracing the tour route */
@@ -356,13 +425,21 @@ export class City {
     // stops 1→6: east along the north road
     for (let x = 6; x <= 59; x += 3) chevron(x * TILE, 14 * TILE, 1, 0);
     // down the east edge to Gradient Row
-    for (let y = 15.5; y <= 21; y += 2.5) chevron(63 * TILE, y * TILE, 0, 1);
+    for (let y = 15.5; y <= 23; y += 2.5) chevron(63 * TILE, y * TILE, 0, 1);
     // stops 7→9: west along the mid road
-    for (let x = 60; x >= 6; x -= 3) chevron(x * TILE, 23 * TILE, -1, 0);
+    for (let x = 60; x >= 6; x -= 3) chevron(x * TILE, 25 * TILE, -1, 0);
     // down the west edge to the south row
-    for (let y = 24.5; y <= 30; y += 2.5) chevron(3 * TILE, y * TILE, 0, 1);
+    for (let y = 26.5; y <= 34; y += 2.5) chevron(3 * TILE, y * TILE, 0, 1);
     // stops 10→15: east along the south road
-    for (let x = 5; x <= 58; x += 3) chevron(x * TILE, 32 * TILE, 1, 0);
+    for (let x = 5; x <= 58; x += 3) chevron(x * TILE, 36 * TILE, 1, 0);
+    // over the east bridge into the frontier
+    for (let y = 37.5; y <= 49; y += 2.5) chevron(63 * TILE, y * TILE, 0, 1);
+    // stops 16→18: west along the frontier's first road
+    for (let x = 60; x >= 6; x -= 3) chevron(x * TILE, 51 * TILE, -1, 0);
+    // down the west edge to Language Lane
+    for (let y = 52.5; y <= 60; y += 2.5) chevron(3 * TILE, y * TILE, 0, 1);
+    // stops 19→21: east along the frontier's south road
+    for (let x = 5; x <= 58; x += 3) chevron(x * TILE, 62 * TILE, 1, 0);
   }
 
   /** glowing dots that travel the training loop while the main model trains */
@@ -371,7 +448,7 @@ export class City {
     // waypoints through the loop, in tile coords (door fronts, on roads)
     const path: [number, number][] = [
       [10, 14], [19.5, 14], [28.5, 14], [37, 14], [45.5, 14], [55.5, 14],
-      [62.5, 14], [62.5, 23], [52, 23], [42.5, 23], [31, 23], [31, 14], [10, 14],
+      [62.5, 14], [62.5, 24], [52, 24], [42.5, 24], [31, 24], [31, 14], [10, 14],
     ];
     const segLens: number[] = [];
     let total = 0;

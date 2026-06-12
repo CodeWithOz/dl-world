@@ -649,6 +649,8 @@ input[type="range"] {
   border-radius: 8px;
   cursor: crosshair;
   image-rendering: pixelated;
+  /* dragging on the pad must paint, never scroll the panel */
+  touch-action: none;
 }
 
 .forward-view {
@@ -679,6 +681,87 @@ input[type="range"] {
 
 .microscope {
   margin-top: 4px;
+}
+
+/* ------------------------------------------------- frontier panel widgets --- */
+
+/* token chips (Tokenizer Mill / Echo Tower) */
+.token-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 8px 0;
+}
+
+.token {
+  background: #222840;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  color: #dfe6f3;
+}
+
+.token-special {
+  border-color: #ffd34d;
+  color: #ffe44d;
+}
+
+/* the review reader's input */
+.review-input {
+  width: min(640px, 100%);
+  background: #10141f;
+  color: #e8ecf5;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  padding: 8px 10px;
+  font-family: inherit;
+  font-size: 13px;
+  resize: vertical;
+}
+
+/* decision tree boxes (Decision Arboretum) */
+.tree-node {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 8px;
+  padding: 6px 9px;
+  margin: 4px 0;
+  background: #1d2336;
+  font-size: 12.5px;
+}
+
+.tree-on-path {
+  border-color: #ffd34d;
+  background: #262a3a;
+}
+
+.tree-q {
+  color: #8fd1c8;
+  font-family: ui-monospace, monospace;
+}
+
+.tree-q b {
+  color: #ffe44d;
+}
+
+.tree-kids {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+  align-items: flex-start;
+}
+
+.tree-branch {
+  flex: 1 1 0;
+  min-width: 0;
+}
+
+@media (max-width: 760px) {
+  /* deep trees stack their branches instead of squeezing */
+  .tree-kids {
+    flex-direction: column;
+  }
 }
 
 /* -------------------------------------------------------- touch controls --- */
@@ -719,10 +802,12 @@ input[type="range"] {
   gap: 4px;
 }
 
+/* all four D-pad buttons share one ▲ glyph, rotated per direction so the
+   arrows are pixel-identical (mixed glyphs render at mixed sizes) */
 .touch-up { grid-area: up; }
-.touch-left { grid-area: left; }
-.touch-right { grid-area: right; }
-.touch-down { grid-area: down; }
+.touch-left { grid-area: left; transform: rotate(-90deg); }
+.touch-right { grid-area: right; transform: rotate(90deg); }
+.touch-down { grid-area: down; transform: rotate(180deg); }
 
 .touch-actions {
   position: absolute;
@@ -783,13 +868,62 @@ input[type="range"] {
     max-height: 86vh;
   }
 
+  /* one scroll direction only: the body scrolls vertically; anything too
+     wide (tables, code-ish rows) scrolls horizontally inside its own box */
   .panel-body {
     padding: 10px 12px 18px;
-    overflow-x: auto;
+    overflow-x: hidden;
   }
 
   .panel-header {
     padding: 12px 14px 10px;
+  }
+
+  /* canvases (charts, heatmaps, digits) shrink to the panel width and keep
+     their aspect ratio instead of forcing the whole body sideways.
+     !important: chart widgets set inline style.width/height for retina
+     scaling, and inline styles would otherwise win and distort the ratio */
+  .panel-body canvas {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  .panel-body .drawpad {
+    width: min(78vw, 280px);
+  }
+
+  .num-table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .bigmath {
+    overflow-x: auto;
+  }
+
+  .hstack {
+    flex-wrap: wrap;
+  }
+
+  .forward-view {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .graph-node {
+    grid-template-columns: 1fr auto;
+    font-size: 11.5px;
+  }
+
+  .graph-shape {
+    display: none;
+  }
+
+  /* long option labels (sample pickers) must not push the panel sideways */
+  .control-label select {
+    max-width: 60vw;
   }
 
   .blurb {
@@ -798,7 +932,7 @@ input[type="range"] {
   }
 
   .prompt {
-    bottom: 156px;
+    bottom: 196px;
     font-size: 13px;
     max-width: 92vw;
   }

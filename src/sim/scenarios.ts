@@ -23,7 +23,16 @@ import {
 import { SGD } from "../engine/optim";
 import { DataLoader, MnistData, mulberry32 } from "../engine/data";
 
-export type ScenarioId = "mlp10" | "linear37" | "multilabel" | "regression";
+export type ScenarioId =
+  | "mlp10"
+  | "linear37"
+  | "multilabel"
+  | "regression"
+  // the frontier (see scenarios2.ts)
+  | "refinery"
+  | "collab"
+  | "sentiment"
+  | "rnnlm";
 
 export interface ParamInfo {
   name: string;
