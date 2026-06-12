@@ -71,12 +71,21 @@ export function refreshable(
   return wrap;
 }
 
+/** format a metric by its name: accuracies as %, pixel errors as px,
+ *  anything else (RMSE in stars, …) as a plain number */
+export function fmtMetric(name: string, value: number): string {
+  if (name.includes("accuracy")) return `${(value * 100).toFixed(1)}%`;
+  if (name.includes("px")) return `${fmt(value, 2)}px`;
+  return fmt(value, 3);
+}
+
 /** play / pause / step / speed / lr — the training bench used by several buildings */
 export function trainerControls(trainer: Trainer, opts: { showLr?: boolean } = {}): [HTMLElement, () => void] {
   const wrap = el("div", "trainer-controls");
   const row = el("div", "controls-row");
-  const playBtn = button(trainer.running ? "⏸ pause" : "▶ train", () => trainer.toggle(), "btn-play");
-  const stepBtn = button("⏭ one step", () => trainer.stepOnce());
+  // ︎ keeps the glyphs as text on iOS (no emoji presentation)
+  const playBtn = button(trainer.running ? "⏸︎ pause" : "▶︎ train", () => trainer.toggle(), "btn-play");
+  const stepBtn = button("⏭︎ one step", () => trainer.stepOnce());
   row.append(playBtn, stepBtn);
 
   const speedWrap = el("label", "control-label", "speed ");
@@ -116,7 +125,7 @@ export function trainerControls(trainer: Trainer, opts: { showLr?: boolean } = {
     dirty = true;
   });
   const offState = trainer.on("state", () => {
-    playBtn.textContent = trainer.running ? "⏸ pause" : "▶ train";
+    playBtn.textContent = trainer.running ? "⏸︎ pause" : "▶︎ train";
   });
   const update = () => {
     if (!dirty) return;
@@ -127,13 +136,7 @@ export function trainerControls(trainer: Trainer, opts: { showLr?: boolean } = {
       chip("epoch", String(s.epoch)),
       chip("step", String(s.step)),
       chip("loss", fmt(trainer.lastLossValue, 4), true),
-      chip(
-        s.metricName,
-        s.metricName.includes("px")
-          ? `${fmt(trainer.lastMetricValue, 2)}px`
-          : `${(trainer.lastMetricValue * 100).toFixed(1)}%`,
-        true,
-      ),
+      chip(s.metricName, fmtMetric(s.metricName, trainer.lastMetricValue), true),
     );
     chartWrap.innerHTML = "";
     const pts = s.lossHistory.map((p) => ({ x: p.step, y: p.value }));

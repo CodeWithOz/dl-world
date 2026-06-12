@@ -37,8 +37,21 @@ npm run fetch-mnist  # regenerate public/data/mnist.bin from source MNIST
    Backward functions must match the *clamped/actual* forward (see `log`).
 6. **Concept-first naming, no chapter numbers in-world.** Building names,
    district names, panel titles, and blurbs describe concepts ("Loss
-   District", "First Steps Quarter"), never book chapters. The fastai
-   chapter mapping lives only in README.md.
+   District", "First Steps Quarter", "Sequence Summit"), never book
+   chapters. The book is how the *curriculum* is organized, not how the
+   city is organized: the fastai chapter mapping lives only in README.md.
+7. **The book is the source material — read it, don't guess.** A full copy
+   of fast.ai's *Deep Learning for Coders* notebooks is vendored at
+   `reference/fastbook-master.zip`. Before building or changing any feature
+   that demonstrates a book concept, unzip the relevant chapter and read
+   it (notebooks are JSON; extract the markdown/code cells, e.g.
+   `unzip -p reference/fastbook-master.zip fastbook-master/08_collab.ipynb`
+   piped through a small script). Models, formulas, jargon, and named
+   techniques in DL World must match what the book actually teaches — e.g.
+   the Echo Tower is the book's `LMModel2`, the Taste Cinema is
+   `DotProductBias` with `sigmoid_range` and weight decay, label smoothing
+   uses the book's (1−ε+ε/N) targets. Simplifications are fine, but they
+   must be acknowledged in the panel copy, never silent.
 
 ## UI conventions
 
@@ -67,13 +80,34 @@ npm run fetch-mnist  # regenerate public/data/mnist.bin from source MNIST
 
 - Tiles are 32px; the map is drawn procedurally in `src/world/city.ts` —
   no image assets anywhere.
-- Buildings carry a `tour` number (1–15) shown as a gold badge on their
+- Buildings carry a `tour` number (1–21) shown as a gold badge on their
   sign; the route is also painted as road chevrons. If you add a building,
   give it a tour stop and keep the route geographically sensible:
-  data → forward → loss → backward → step → metrics, then extensions.
-- District labels float on the grass strip *above* their building group so
-  they can't collide with the rooftop signs. Check overlap when moving
-  buildings.
+  data → forward → loss → backward → step → metrics, then extensions,
+  then south across the river into the Frontier (non-image data).
+- District names are lawn-sign placards (`DISTRICT_SIGNS` in
+  `src/world/city.ts`): bright text on a dark board, planted on the grass
+  strip *above* their building group. `generate()` keeps trees/flowers out
+  of each sign's footprint — if you add or move a sign, keep it in
+  `DISTRICT_SIGNS` so the decor clearing applies. Every river crossing
+  carries a "THE FRONTIER" marker (small screens may never see the
+  central sign).
+- Tour chevrons must form a continuous, bounded route: they keep going
+  past the last stop of a row to the junction that leads onward, and they
+  STOP at the final stop (Echo Tower) — no arrows pointing at nothing.
+- The plaza holds the network monument (animated while `main` trains) and
+  the tour kiosk: standing next to the kiosk and pressing E rides the
+  "express" (a scripted glide, `Game.startTourExpress`) to stop ①. The
+  avatar spawns beside the kiosk so this is the first prompt players see.
+- The chips circulating the training loop carry real labels from
+  `world.mlp.lastBatch` — they are the current mini-batch, not decoration;
+  they only appear while the main trainer runs.
+- The Frontier's datasets (`src/sim/datasets.ts`) are generated in code
+  with *planted* structure + noise; models must rediscover the structure.
+  Don't replace them with hardcoded "learned" results — panels compare
+  planted truth vs. learned parameters, and that only works if training is
+  real. The sentiment corpus uses identical templates for both classes so
+  function words carry no class signal; keep that property.
 - The avatar's head is deliberately a non-human mint color — keep it
   playful and unreal; never use a real skin tone.
 - Works on touch devices: on-screen controls in `src/ui/touch.ts` write

@@ -4,6 +4,7 @@
 
 import { MnistData } from "../engine/data";
 import { Linear37, Mlp10, MultiLabel, Regression } from "./scenarios";
+import { CollabFilter, Refinery, RnnLm, SentimentNet } from "./scenarios2";
 import { Trainer } from "./trainer";
 import { LrFinderResult } from "./lrfinder";
 
@@ -14,6 +15,11 @@ export class World {
   cottage: Trainer;
   workshop: Trainer;
   studio: Trainer;
+  // the frontier (beyond images): tricks, ratings, text, sequences
+  refinery: Trainer;
+  cinema: Trainer;
+  sentiment: Trainer;
+  echo: Trainer;
   lrResult: LrFinderResult | null = null;
 
   constructor(data: MnistData) {
@@ -22,11 +28,12 @@ export class World {
     this.cottage = new Trainer(new Linear37(data));
     this.workshop = new Trainer(new MultiLabel(data));
     this.studio = new Trainer(new Regression(data));
+    this.refinery = new Trainer(new Refinery(data));
+    this.cinema = new Trainer(new CollabFilter(data));
+    this.sentiment = new Trainer(new SentimentNet(data));
+    this.echo = new Trainer(new RnnLm(data));
     // one warm-up step each so every panel has a real graph to show
-    this.main.ensureWarm();
-    this.cottage.ensureWarm();
-    this.workshop.ensureWarm();
-    this.studio.ensureWarm();
+    for (const t of this.trainers()) t.ensureWarm();
   }
 
   get mlp(): Mlp10 {
@@ -41,9 +48,30 @@ export class World {
   get reg(): Regression {
     return this.studio.scenario as Regression;
   }
+  get refine(): Refinery {
+    return this.refinery.scenario as Refinery;
+  }
+  get collab(): CollabFilter {
+    return this.cinema.scenario as CollabFilter;
+  }
+  get sent(): SentimentNet {
+    return this.sentiment.scenario as SentimentNet;
+  }
+  get rnn(): RnnLm {
+    return this.echo.scenario as RnnLm;
+  }
 
   trainers(): Trainer[] {
-    return [this.main, this.cottage, this.workshop, this.studio];
+    return [
+      this.main,
+      this.cottage,
+      this.workshop,
+      this.studio,
+      this.refinery,
+      this.cinema,
+      this.sentiment,
+      this.echo,
+    ];
   }
 
   tick(dt: number): void {

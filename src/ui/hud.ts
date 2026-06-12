@@ -9,9 +9,10 @@ export function mountHud(world: World): void {
   const title = el("div", "hud-title", "🏙 <b>DL WORLD</b>");
   hud.append(title);
 
-  const play = el("button", "hud-btn hud-play", "▶ train");
+  // ︎ forces text presentation — iOS would otherwise render ▶/⏭/⏸ as emoji
+  const play = el("button", "hud-btn hud-play", "▶︎ train");
   play.addEventListener("click", () => world.main.toggle());
-  const step = el("button", "hud-btn", "⏭ step");
+  const step = el("button", "hud-btn", "⏭︎ step");
   step.addEventListener("click", () => world.main.stepOnce());
   hud.append(play, step);
 
@@ -48,7 +49,7 @@ export function mountHud(world: World): void {
       `<span class="hud-stat">lr <b>${fmt(s.opt.lr, 3)}</b></span>`;
   };
   world.main.on("state", () => {
-    play.textContent = world.main.running ? "⏸ pause" : "▶ train";
+    play.textContent = world.main.running ? "⏸︎ pause" : "▶︎ train";
     play.classList.toggle("hud-running", world.main.running);
   });
   update();
