@@ -364,7 +364,9 @@ export const BUILDINGS: BuildingDef[] = [
     district: "Language Lane",
     tour: 20,
     icon: "🎭",
-    x: 24, y: 55, w: 8, h: 6,
+    // aligned with Taste Cinema above: stays west of the central avenue
+    // (x30-31), which runs unbroken from the north road to the bottom one
+    x: 22, y: 55, w: 8, h: 6,
     color: "#d98fb0", roof: "#a65a7e",
     trainer: "sentiment",
     blurb: "A model that reads reviews: one learned weight per vocabulary word decides — thumbs up or thumbs down?",

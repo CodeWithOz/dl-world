@@ -104,12 +104,11 @@ export class City {
     this.rect(2, 35, MAP_W - 4, 2, T.Road);
     this.rect(2, 50, MAP_W - 4, 2, T.Road);
     this.rect(2, 61, MAP_W - 4, 2, T.Road);
-    // vertical roads: the west/east edges run the whole city; the central
-    // avenue ends at the frontier's first road (Sentiment Studio stands
-    // where it would continue — no dead-end stubs)
+    // vertical roads run the whole city, old town through the frontier —
+    // keep building footprints clear of all three columns
     this.rect(2, 13, 2, 50, T.Road);
     this.rect(MAP_W - 4, 13, 2, 50, T.Road);
-    this.rect(30, 13, 2, 39, T.Road);
+    this.rect(30, 13, 2, 50, T.Road);
     // plaza, the network monument, and the tour kiosk
     this.rect(26, 18, 11, 6, T.Plaza);
     this.rect(30, 19, 4, 2, T.Monument);
