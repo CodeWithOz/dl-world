@@ -199,10 +199,14 @@ export function oobMae(forest: Forest, X: number[][], y: number[], idx: number[]
     total += Math.abs(s / n - y[i]);
     counted++;
   }
+  // every row in-bag for every tree (tiny forests) would leave nothing to
+  // score — return 0 rather than NaN
+  if (counted === 0) return 0;
   return total / counted;
 }
 
 export function predictForest(trees: TreeNode[], row: number[]): number {
+  if (trees.length === 0) return 0;
   let s = 0;
   for (const t of trees) s += predictTree(t, row);
   return s / trees.length;

@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import { MnistData } from "../src/engine/data";
 import { CollabFilter, Refinery, RnnLm, SentimentNet } from "../src/sim/scenarios2";
 import {
+  TAB_FEATS,
   makeCollabData,
   makeHumanNumbers,
   makeTabularData,
@@ -30,6 +31,9 @@ function loadMnistFromDisk(): MnistData {
   const buf = new Uint8Array(
     readFileSync(join(here, "..", "public", "data", "mnist.bin")),
   );
+  const magic = String.fromCharCode(buf[0], buf[1], buf[2], buf[3]);
+  if (magic !== "DLW1")
+    throw new Error(`Invalid MNIST file magic: expected "DLW1", got "${magic}"`);
   const view = new DataView(buf.buffer, buf.byteOffset);
   const nTrain = view.getUint32(4, true);
   const nTest = view.getUint32(8, true);
@@ -153,7 +157,9 @@ describe("decision trees on the rents table", () => {
     const imp = featureImportance(forest, 5);
     expect(imp.reduce((a, b) => a + b, 0)).toBeCloseTo(1, 5);
     // size m² was planted as the dominant driver — the forest must find that
-    expect(Math.max(...imp)).toBe(imp[1]);
+    const sizeIdx = TAB_FEATS.indexOf("size m²");
+    expect(sizeIdx).not.toBe(-1);
+    expect(Math.max(...imp)).toBe(imp[sizeIdx]);
   });
 });
 
