@@ -17,7 +17,12 @@ export function fmt(n: number, digits = 4): string {
   if (n === 0) return "0";
   const a = Math.abs(n);
   if (a >= 10000 || a < 0.001) return n.toExponential(2);
-  return n.toFixed(digits).replace(/\.?0+$/, "");
+  // strip trailing zeros only after a decimal point — a bare /\.?0+$/
+  // would also eat the zeros of round integers (1700 → "17")
+  return n
+    .toFixed(digits)
+    .replace(/(\.\d*?)0+$/, "$1")
+    .replace(/\.$/, "");
 }
 
 export function stats(data: Float32Array): { min: number; max: number; mean: number } {

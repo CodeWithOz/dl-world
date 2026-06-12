@@ -198,9 +198,6 @@ export function registerLanguagePanels(): void {
       input.className = "review-input";
       input.rows = 2;
       input.value = text;
-      input.addEventListener("input", () => {
-        text = input.value;
-      });
       const [live, cleanLive, refresh] = liveRegion(world.sentiment, (root) => {
         if (!text.trim()) return;
         const res = sc.classify(text);
@@ -234,8 +231,15 @@ export function registerLanguagePanels(): void {
           ),
         );
       });
+      // the verdict re-reads as you type (debounced a touch), so the panel
+      // always reflects exactly what's in the box — no button to remember
+      let debounce = 0;
+      input.addEventListener("input", () => {
+        text = input.value;
+        window.clearTimeout(debounce);
+        debounce = window.setTimeout(refresh, 150);
+      });
       controls.append(
-        button("📖 read it", () => refresh(), "btn-play"),
         button("🎲 random held-out review", () => {
           const pick = sc.td.test[Math.floor(Math.random() * sc.td.test.length)];
           text = pick.text;
@@ -243,8 +247,16 @@ export function registerLanguagePanels(): void {
           refresh();
         }),
       );
-      body.append(input, controls, live);
-      return cleanLive;
+      body.append(
+        input,
+        el("div", "caption", "type anything — the verdict updates as you type (and as training moves the weights)"),
+        controls,
+        live,
+      );
+      return () => {
+        window.clearTimeout(debounce);
+        cleanLive();
+      };
     },
   });
 

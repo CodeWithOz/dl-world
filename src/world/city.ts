@@ -33,8 +33,12 @@ const DISTRICT_SIGNS: SignDef[] = [
   { text: "TUNING HEIGHTS", x: 26.5, y: 27.4 },
   { text: "SIDE QUEST YARDS", x: 40, y: 27.4 },
   { text: "DEPLOYMENT DOCK", x: 54, y: 27.4 },
-  // the frontier (beyond the river: words, tables & taste)
+  // the frontier (beyond the river: words, tables & taste). The two edge
+  // bridges get their own crossing markers — on a phone the central sign
+  // is easy to miss entirely.
   { text: "THE FRONTIER — BEYOND IMAGES", x: 31.5, y: 37.6, big: true },
+  { text: "↓ THE FRONTIER", x: 7.5, y: 37.7 },
+  { text: "↓ THE FRONTIER", x: 56.5, y: 37.7 },
   { text: "TABLE GROVE", x: 10, y: 42.5 },
   { text: "TASTE QUARTER", x: 26, y: 42.5 },
   { text: "REFINEMENT ROW", x: 46, y: 42.5 },
@@ -61,8 +65,11 @@ const enum T {
   Tree = 4,
   Building = 5,
   Door = 6,
-  Fountain = 7,
+  /** the plaza monument's footprint (solid; drawn by drawMonument) */
+  Monument = 7,
   Flower = 8,
+  /** the tour kiosk (solid; interactable — express ride to stop ①) */
+  Kiosk = 9,
 }
 
 export class City {
@@ -101,9 +108,10 @@ export class City {
     this.rect(2, 13, 2, 50, T.Road);
     this.rect(MAP_W - 4, 13, 2, 50, T.Road);
     this.rect(30, 13, 2, 50, T.Road);
-    // plaza + fountain
+    // plaza, the network monument, and the tour kiosk
     this.rect(26, 18, 11, 6, T.Plaza);
-    this.rect(31, 19, 2, 2, T.Fountain);
+    this.rect(30, 19, 4, 2, T.Monument);
+    this.set(29, 22, T.Kiosk);
     // the river that separates old town (images) from the frontier
     // (words, tables & taste) — crossable on the three road bridges
     this.rect(2, 39, MAP_W - 4, 2, T.Water);
@@ -151,7 +159,14 @@ export class City {
 
   isSolid(x: number, y: number): boolean {
     const t = this.get(x, y);
-    return t === T.Tree || t === T.Water || t === T.Building || t === T.Fountain;
+    return (
+      t === T.Tree || t === T.Water || t === T.Building || t === T.Monument || t === T.Kiosk
+    );
+  }
+
+  /** is the tour kiosk on/next to this tile? (for the express prompt) */
+  kioskNear(x: number, y: number): boolean {
+    return Math.abs(x - 29) <= 1 && Math.abs(y - 22) <= 1;
   }
 
   /** building whose door is at/adjacent to this tile, for the enter prompt */
@@ -189,6 +204,8 @@ export class City {
     }
 
     this.drawTourArrows(ctx);
+    this.drawMonument(ctx, time, world);
+    this.drawKiosk(ctx, time);
     this.drawDistrictLabels(ctx);
     this.drawLoopPulses(ctx, time, world);
   }
@@ -242,16 +259,12 @@ export class City {
         ctx.fill();
         break;
       }
-      case T.Fountain: {
-        ctx.fillStyle = "#9fb6c9";
+      case T.Monument:
+      case T.Kiosk: {
+        // plaza floor under the structures; drawMonument/drawKiosk paint
+        // the actual objects after the buildings pass
+        ctx.fillStyle = checker ? "#d6cdb8" : "#cfc5af";
         ctx.fillRect(px, py, TILE, TILE);
-        ctx.fillStyle = "#5aa7d9";
-        ctx.fillRect(px + 3, py + 3, TILE - 6, TILE - 6);
-        const ph = (time * 40) % 16;
-        ctx.fillStyle = "rgba(255,255,255,0.7)";
-        ctx.beginPath();
-        ctx.arc(px + TILE / 2, py + TILE / 2 - ph / 3, 2.5, 0, Math.PI * 2);
-        ctx.fill();
         break;
       }
       default:
@@ -401,13 +414,111 @@ export class City {
       ctx.fillText(s.text, cx, cy + 1);
     }
     ctx.textBaseline = "alphabetic";
-    // plaza title + tour hint
-    ctx.font = "bold 22px 'Trebuchet MS', sans-serif";
-    ctx.fillStyle = "rgba(90, 70, 30, 0.5)";
-    ctx.fillText("⭐ DL WORLD ⭐", 31.5 * TILE, 18.9 * TILE);
+  }
+
+  /** the plaza centerpiece: a little neural network on a plinth. The three
+   *  layers mirror the city's real pipeline (input → hidden → output) and
+   *  the edges light up while the main model trains. */
+  private drawMonument(ctx: CanvasRenderingContext2D, time: number, world: World): void {
+    const x0 = 30 * TILE;
+    const y0 = 19 * TILE;
+    const w = 4 * TILE;
+    const running = world.main.running;
+    // plinth with the city's name
+    ctx.fillStyle = "rgba(0,0,0,0.18)";
+    ctx.fillRect(x0 + 4, y0 + TILE * 1.55, w - 4, 10);
+    ctx.fillStyle = "#a8a193";
+    this.roundedRect(ctx, x0 + 2, y0 + TILE * 0.95, w - 4, TILE * 0.95, 5);
+    ctx.fill();
+    ctx.fillStyle = "#1d3357";
+    this.roundedRect(ctx, x0 + 8, y0 + TILE * 1.12, w - 16, 20, 4);
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255, 211, 77, 0.85)";
+    ctx.lineWidth = 1.5;
+    this.roundedRect(ctx, x0 + 10, y0 + TILE * 1.12 + 2, w - 20, 16, 3);
+    ctx.stroke();
+    ctx.font = "bold 13px 'Trebuchet MS', sans-serif";
+    ctx.fillStyle = "#ffe44d";
+    ctx.textAlign = "center";
+    ctx.fillText("⭐ DL WORLD ⭐", x0 + w / 2, y0 + TILE * 1.12 + 14);
+    // the network: 3 → 4 → 3 nodes above the plinth
+    const colX = [x0 + 22, x0 + w / 2, x0 + w - 22];
+    const colN = [3, 4, 3];
+    const top = y0 - 26;
+    const bot = y0 + TILE * 0.85;
+    const nodeY = (col: number, i: number) =>
+      top + ((i + 1) / (colN[col] + 1)) * (bot - top);
+    ctx.lineWidth = 1;
+    for (let c = 0; c < 2; c++)
+      for (let i = 0; i < colN[c]; i++)
+        for (let j = 0; j < colN[c + 1]; j++) {
+          ctx.strokeStyle = "rgba(245, 233, 207, 0.3)";
+          ctx.beginPath();
+          ctx.moveTo(colX[c], nodeY(c, i));
+          ctx.lineTo(colX[c + 1], nodeY(c + 1, j));
+          ctx.stroke();
+          if (running) {
+            // activations travel the edges while the main pipeline trains
+            const u = (time * 0.55 + i * 0.23 + j * 0.41 + c * 0.5) % 1;
+            const px = colX[c] + (colX[c + 1] - colX[c]) * u;
+            const py = nodeY(c, i) + (nodeY(c + 1, j) - nodeY(c, i)) * u;
+            ctx.fillStyle = "rgba(255, 228, 77, 0.85)";
+            ctx.beginPath();
+            ctx.arc(px, py, 1.6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+    const colors = ["#8fd1c8", "#ffd34d", "#e8907a"];
+    for (let c = 0; c < 3; c++)
+      for (let i = 0; i < colN[c]; i++) {
+        const glow = running ? 0.75 + 0.25 * Math.sin(time * 3 + c + i) : 0.85;
+        ctx.fillStyle = colors[c];
+        ctx.globalAlpha = glow;
+        ctx.beginPath();
+        ctx.arc(colX[c], nodeY(c, i), 4.5, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.strokeStyle = "rgba(0,0,0,0.35)";
+        ctx.stroke();
+      }
+  }
+
+  /** the tour kiosk: a signpost with the ① disc — stand next to it and
+   *  press E to ride the express to the first stop */
+  private drawKiosk(ctx: CanvasRenderingContext2D, time: number): void {
+    const cx = 29.5 * TILE;
+    const cy = 22 * TILE;
+    // post
+    ctx.fillStyle = "#6b4a2f";
+    ctx.fillRect(cx - 3, cy - 4, 6, TILE + 2);
+    // the ① disc, gently bobbing so it reads as interactable
+    const bob = Math.sin(time * 2.2) * 2;
+    ctx.fillStyle = "rgba(0,0,0,0.22)";
+    ctx.beginPath();
+    ctx.ellipse(cx, cy + TILE - 3, 9, 3, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "#ffd34d";
+    ctx.beginPath();
+    ctx.arc(cx, cy - 12 + bob, 10, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = "#2a2417";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.fillStyle = "#2a2417";
     ctx.font = "bold 12px 'Trebuchet MS', sans-serif";
-    ctx.fillStyle = "rgba(90, 70, 30, 0.65)";
-    ctx.fillText("guided tour: follow the numbered signs ① → ㉑", 31.5 * TILE, 22.6 * TILE);
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText("1", cx, cy - 11.5 + bob);
+    // little board: where the tour begins
+    ctx.font = "bold 10.5px 'Trebuchet MS', sans-serif";
+    const label = "tour start — press E";
+    const tw = ctx.measureText(label).width + 14;
+    ctx.fillStyle = "#1d3357";
+    this.roundedRect(ctx, cx - tw / 2, cy + 6, tw, 15, 4);
+    ctx.fill();
+    ctx.fillStyle = "#ffe44d";
+    ctx.fillText(label, cx, cy + 14);
+    ctx.textBaseline = "alphabetic";
   }
 
   /** subtle chevrons painted on the roads, tracing the tour route */
@@ -430,19 +541,23 @@ export class City {
     for (let x = 60; x >= 6; x -= 3) chevron(x * TILE, 25 * TILE, -1, 0);
     // down the west edge to the south row
     for (let y = 26.5; y <= 34; y += 2.5) chevron(3 * TILE, y * TILE, 0, 1);
-    // stops 10→15: east along the south road
-    for (let x = 5; x <= 58; x += 3) chevron(x * TILE, 36 * TILE, 1, 0);
+    // stops 10→15: east along the south road, all the way to the
+    // T-junction so the route visibly continues past the last old-town stop
+    for (let x = 5; x <= 61; x += 3) chevron(x * TILE, 36 * TILE, 1, 0);
     // over the east bridge into the frontier
     for (let y = 37.5; y <= 49; y += 2.5) chevron(63 * TILE, y * TILE, 0, 1);
     // stops 16→18: west along the frontier's first road
     for (let x = 60; x >= 6; x -= 3) chevron(x * TILE, 51 * TILE, -1, 0);
     // down the west edge to Language Lane
     for (let y = 52.5; y <= 60; y += 2.5) chevron(3 * TILE, y * TILE, 0, 1);
-    // stops 19→21: east along the frontier's south road
-    for (let x = 5; x <= 58; x += 3) chevron(x * TILE, 62 * TILE, 1, 0);
+    // stops 19→21: east along the frontier's south road — the route ends
+    // at Echo Tower's door, so the arrows stop there too
+    for (let x = 5; x <= 46; x += 3) chevron(x * TILE, 62 * TILE, 1, 0);
   }
 
-  /** glowing dots that travel the training loop while the main model trains */
+  /** the current mini-batch riding the training loop: little chips carrying
+   *  the batch's actual digits circulate data → mills → foundry → backprop →
+   *  optimizer and back, while the main model trains */
   private drawLoopPulses(ctx: CanvasRenderingContext2D, time: number, world: World): void {
     if (!world.main.running) return;
     // waypoints through the loop, in tile coords (door fronts, on roads)
@@ -458,6 +573,9 @@ export class City {
       total += L;
     }
     const N = 7;
+    const batch = world.mlp.lastBatch;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
     for (let k = 0; k < N; k++) {
       let dist = ((time * 3.2 + (k * total) / N) % total);
       let i = 0;
@@ -468,13 +586,28 @@ export class City {
       const t = dist / segLens[i];
       const x = (path[i][0] + (path[i + 1][0] - path[i][0]) * t) * TILE;
       const y = (path[i][1] + (path[i + 1][1] - path[i][1]) * t) * TILE + TILE / 2;
-      const g = ctx.createRadialGradient(x, y, 1, x, y, 9);
-      g.addColorStop(0, "rgba(255, 235, 130, 0.95)");
+      // a chip carrying one real digit from the batch currently in the loop
+      const digit = batch.length > 0 ? world.data.trainLabels[batch[k % batch.length]] : null;
+      const g = ctx.createRadialGradient(x, y, 2, x, y, 13);
+      g.addColorStop(0, "rgba(255, 235, 130, 0.55)");
       g.addColorStop(1, "rgba(255, 235, 130, 0)");
       ctx.fillStyle = g;
       ctx.beginPath();
-      ctx.arc(x, y, 9, 0, Math.PI * 2);
+      ctx.arc(x, y, 13, 0, Math.PI * 2);
       ctx.fill();
+      ctx.fillStyle = "#1b2030";
+      this.roundedRect(ctx, x - 7, y - 8.5, 14, 17, 3);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(255, 211, 77, 0.9)";
+      ctx.lineWidth = 1;
+      this.roundedRect(ctx, x - 7, y - 8.5, 14, 17, 3);
+      ctx.stroke();
+      if (digit !== null) {
+        ctx.fillStyle = "#ffe44d";
+        ctx.font = "bold 11px ui-monospace, monospace";
+        ctx.fillText(String(digit), x, y + 0.5);
+      }
     }
+    ctx.textBaseline = "alphabetic";
   }
 }

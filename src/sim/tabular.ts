@@ -239,9 +239,12 @@ export interface Arboretum {
   oobMae: number;
   importance: number[];
   firstSplits: (SplitCandidate | null)[];
+  /** how many forests have been grown so far (regrowing bumps it) */
+  growth: number;
 }
 
 let arboretum: Arboretum | null = null;
+let forestSeed = 7;
 
 /** everything the Decision Arboretum shows, computed once on first entry */
 export function getArboretum(): Arboretum {
@@ -249,7 +252,7 @@ export function getArboretum(): Arboretum {
   const data = makeTabularData();
   const { rows: X, rent: y, trainIdx, validIdx } = data;
   const tree = fitTree(X, y, trainIdx, { maxDepth: 4, minLeaf: 8 });
-  const forest = fitForestDetailed(X, y, trainIdx, 20);
+  const forest = fitForestDetailed(X, y, trainIdx, 20, forestSeed);
   arboretum = {
     data,
     tree,
@@ -259,6 +262,26 @@ export function getArboretum(): Arboretum {
     oobMae: oobMae(forest, X, y, trainIdx),
     importance: featureImportance(forest.trees, data.featNames.length),
     firstSplits: splitCandidates(X, y, trainIdx),
+    growth: 1,
   };
   return arboretum;
+}
+
+/**
+ * Regrow the forest with fresh bootstrap draws. The single tree is
+ * deterministic (same data, same questions — nothing to redo), but the
+ * forest's randomness is real: every regrowth gives slightly different
+ * errors and importances. That wobble is sampling variance, live.
+ */
+export function regrowForest(): Arboretum {
+  const a = getArboretum();
+  forestSeed += 1;
+  const { rows: X, rent: y, trainIdx, validIdx } = a.data;
+  const forest = fitForestDetailed(X, y, trainIdx, 20, forestSeed);
+  a.forest = forest.trees;
+  a.forestMae = maeOn(y, validIdx, (r) => predictForest(forest.trees, r), X);
+  a.oobMae = oobMae(forest, X, y, trainIdx);
+  a.importance = featureImportance(forest.trees, a.data.featNames.length);
+  a.growth += 1;
+  return a;
 }

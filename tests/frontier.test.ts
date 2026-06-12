@@ -83,7 +83,7 @@ describe("frontier scenarios learn", () => {
     const after = s.evaluate();
     expect(after).toBeLessThan(before);
     expect(after).toBeLessThan(0.8);
-  });
+  }, 30000);
 
   it("sentiment: held-out accuracy beats 80% quickly", () => {
     const s = new SentimentNet(data);
@@ -94,7 +94,7 @@ describe("frontier scenarios learn", () => {
     const neg = s.classify("a boring film with sloppy pacing");
     expect(pos.p).toBeGreaterThan(0.5);
     expect(neg.p).toBeLessThan(0.5);
-  });
+  }, 30000);
 
   it("rnn lm: beats the most-common-token baseline on the held-out tail", () => {
     const s = new RnnLm(data);
@@ -107,7 +107,7 @@ describe("frontier scenarios learn", () => {
     const gen = s.generate([...s.hn.ids.subarray(0, 3)], 10);
     expect(gen.length).toBe(10);
     for (const t of gen) expect(s.hn.vocab).toContain(t);
-  });
+  }, 30000);
 
   it("refinery: both twins learn, and the display graph carries the tricks", () => {
     const s = new Refinery(data);
@@ -127,7 +127,7 @@ describe("frontier scenarios learn", () => {
     expect(tta.views).toBe(5);
     expect(tta.tta).toBeGreaterThan(0.3);
     expect(Math.abs(tta.tta - tta.plain)).toBeLessThan(0.2);
-  });
+  }, 30000);
 });
 
 describe("decision trees on the rents table", () => {

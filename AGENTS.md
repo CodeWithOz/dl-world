@@ -89,7 +89,19 @@ npm run fetch-mnist  # regenerate public/data/mnist.bin from source MNIST
   `src/world/city.ts`): bright text on a dark board, planted on the grass
   strip *above* their building group. `generate()` keeps trees/flowers out
   of each sign's footprint — if you add or move a sign, keep it in
-  `DISTRICT_SIGNS` so the decor clearing applies.
+  `DISTRICT_SIGNS` so the decor clearing applies. Every river crossing
+  carries a "THE FRONTIER" marker (small screens may never see the
+  central sign).
+- Tour chevrons must form a continuous, bounded route: they keep going
+  past the last stop of a row to the junction that leads onward, and they
+  STOP at the final stop (Echo Tower) — no arrows pointing at nothing.
+- The plaza holds the network monument (animated while `main` trains) and
+  the tour kiosk: standing next to the kiosk and pressing E rides the
+  "express" (a scripted glide, `Game.startTourExpress`) to stop ①. The
+  avatar spawns beside the kiosk so this is the first prompt players see.
+- The chips circulating the training loop carry real labels from
+  `world.mlp.lastBatch` — they are the current mini-batch, not decoration;
+  they only appear while the main trainer runs.
 - The Frontier's datasets (`src/sim/datasets.ts`) are generated in code
   with *planted* structure + noise; models must rediscover the structure.
   Don't replace them with hardcoded "learned" results — panels compare

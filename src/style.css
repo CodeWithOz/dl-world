@@ -745,23 +745,39 @@ input[type="range"] {
   color: #ffe44d;
 }
 
+/* children stack vertically, indented under their question — deep trees
+   stay readable at any width (off-path branches collapse into stubs) */
 .tree-kids {
   display: flex;
-  gap: 8px;
-  margin-top: 6px;
-  align-items: flex-start;
+  flex-direction: column;
+  gap: 4px;
+  margin: 6px 0 2px 18px;
+  border-left: 2px solid rgba(255, 255, 255, 0.08);
+  padding-left: 10px;
 }
 
 .tree-branch {
-  flex: 1 1 0;
   min-width: 0;
 }
 
-@media (max-width: 760px) {
-  /* deep trees stack their branches instead of squeezing */
-  .tree-kids {
-    flex-direction: column;
-  }
+.tree-stub {
+  display: block;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px dashed rgba(255, 255, 255, 0.18);
+  border-radius: 7px;
+  color: #8d96ab;
+  font-size: 12px;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  padding: 4px 9px;
+  cursor: pointer;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.tree-stub:hover {
+  border-color: #5ad1c8;
+  color: #dfe6f3;
 }
 
 /* -------------------------------------------------------- touch controls --- */

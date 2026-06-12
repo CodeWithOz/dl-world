@@ -17,13 +17,18 @@ export class Game {
   ctx: CanvasRenderingContext2D;
   world: World;
   city = new City();
-  avatar = new Avatar(31.5 * TILE, 21.5 * TILE);
+  // spawn beside the tour kiosk so the "ride the express to ①" hint is
+  // the first thing a new player sees
+  avatar = new Avatar(30.5 * TILE, 22.5 * TILE);
   scene: Scene = { kind: "city" };
   keys = new Set<string>();
   promptEl: HTMLElement;
   blurbEl: HTMLElement;
   time = 0;
   private last = performance.now();
+  /** the tour express: a short scripted flight from the kiosk to stop ① */
+  private travel: { pts: { x: number; y: number }[]; lens: number[]; total: number; t: number; dur: number } | null = null;
+  private trail: { x: number; y: number; age: number }[] = [];
   /** disable movement while a panel is open */
   get inputLocked(): boolean {
     return isPanelOpen();
@@ -70,9 +75,14 @@ export class Game {
   }
 
   private interact(): void {
+    if (this.travel) return;
     const tx = Math.floor(this.avatar.x / TILE);
     const ty = Math.floor(this.avatar.y / TILE);
     if (this.scene.kind === "city") {
+      if (this.city.kioskNear(tx, ty)) {
+        this.startTourExpress();
+        return;
+      }
       const b = this.city.doorAt(tx, ty);
       if (b) this.enterBuilding(b);
     } else {
@@ -108,6 +118,54 @@ export class Game {
     this.avatar.dir = "down";
   }
 
+  /** the kiosk ride: glide up the plaza and west along the road to the
+   *  Dataset Warehouse — the same route the tour itself takes, in reverse */
+  startTourExpress(): void {
+    if (this.scene.kind !== "city" || this.travel) return;
+    const pts = [
+      { x: this.avatar.x, y: this.avatar.y },
+      { x: 28.5 * TILE, y: 21.5 * TILE },
+      { x: 28.5 * TILE, y: 14.5 * TILE },
+      { x: 10.5 * TILE, y: 14.5 * TILE },
+      { x: 10.5 * TILE, y: 13.55 * TILE },
+    ];
+    const lens: number[] = [];
+    let total = 0;
+    for (let i = 1; i < pts.length; i++) {
+      const L = Math.hypot(pts[i].x - pts[i - 1].x, pts[i].y - pts[i - 1].y);
+      lens.push(L);
+      total += L;
+    }
+    this.travel = { pts, lens, total, t: 0, dur: Math.max(1.4, total / 420) };
+  }
+
+  private updateTravel(dt: number): void {
+    const tr = this.travel!;
+    tr.t += dt;
+    const raw = Math.min(tr.t / tr.dur, 1);
+    const u = raw * raw * (3 - 2 * raw); // ease in/out
+    let dist = u * tr.total;
+    let i = 0;
+    while (i < tr.lens.length - 1 && dist > tr.lens[i]) {
+      dist -= tr.lens[i];
+      i++;
+    }
+    const a = tr.pts[i];
+    const b = tr.pts[i + 1];
+    const f = tr.lens[i] === 0 ? 0 : Math.min(dist / tr.lens[i], 1);
+    this.avatar.x = a.x + (b.x - a.x) * f;
+    this.avatar.y = a.y + (b.y - a.y) * f;
+    this.avatar.moving = true;
+    this.avatar.dir =
+      Math.abs(b.x - a.x) > Math.abs(b.y - a.y) ? (b.x > a.x ? "right" : "left") : b.y > a.y ? "down" : "up";
+    this.trail.push({ x: this.avatar.x, y: this.avatar.y, age: 0 });
+    if (raw >= 1) {
+      this.travel = null;
+      this.avatar.moving = false;
+      this.avatar.dir = "up";
+    }
+  }
+
   private inputVector(): { dx: number; dy: number; run: boolean } {
     let dx = 0;
     let dy = 0;
@@ -125,7 +183,13 @@ export class Game {
     this.time += dt;
     this.world.tick(dt);
 
-    if (!this.inputLocked) {
+    // fade the express trail even after arrival
+    for (const p of this.trail) p.age += dt;
+    this.trail = this.trail.filter((p) => p.age < 0.7);
+
+    if (this.travel) {
+      this.updateTravel(dt);
+    } else if (!this.inputLocked) {
       const input = this.inputVector();
       if (this.scene.kind === "city")
         this.avatar.update(dt, input, (x, y) => this.city.isSolid(x, y), TILE);
@@ -159,6 +223,17 @@ export class Game {
       ctx.save();
       ctx.translate(-camX, -camY);
       this.city.draw(ctx, { x: camX, y: camY, w: vw, h: vh }, this.time, this.world);
+      // the express ride's sparkle trail
+      for (const p of this.trail) {
+        const a = 0.5 * (1 - p.age / 0.7);
+        const g = ctx.createRadialGradient(p.x, p.y, 1, p.x, p.y, 10);
+        g.addColorStop(0, `rgba(255, 235, 130, ${a})`);
+        g.addColorStop(1, "rgba(255, 235, 130, 0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 10, 0, Math.PI * 2);
+        ctx.fill();
+      }
       this.avatar.draw(ctx, this.time);
       ctx.restore();
     } else {
@@ -190,7 +265,7 @@ export class Game {
   private updatePrompt(): void {
     let prompt = "";
     let blurb = "";
-    if (!isPanelOpen()) {
+    if (!isPanelOpen() && !this.travel) {
       const tx = Math.floor(this.avatar.x / TILE);
       const ty = Math.floor(this.avatar.y / TILE);
       if (this.scene.kind === "city") {
@@ -198,6 +273,10 @@ export class Game {
         if (b) {
           prompt = `Press E — enter ${b.name}`;
           blurb = b.blurb;
+        } else if (this.city.kioskNear(tx, ty)) {
+          prompt = "Press E — ride the express to tour stop ①";
+          blurb =
+            "The guided tour starts at the Dataset Warehouse in the north-west. Stops ① → ㉑ trace the whole story: data → forward → loss → backward → step → metrics — then across the river, where the data stops being images.";
         }
       } else {
         const s = this.scene.interior.stationNear(this.avatar.x, this.avatar.y);

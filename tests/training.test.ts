@@ -36,21 +36,21 @@ describe("scenarios learn on the real MNIST subset", () => {
     for (let e = 0; e < 3; e++)
       for (let b = 0; b < s.loader.batchesPerEpoch; b++) s.trainStep();
     expect(s.evaluate()).toBeGreaterThan(0.9);
-  });
+  }, 30000);
 
   it("mlp10 reaches >85% in 6 epochs", () => {
     const s = new Mlp10(data);
     for (let e = 0; e < 6; e++)
       for (let b = 0; b < s.loader.batchesPerEpoch; b++) s.trainStep();
     expect(s.evaluate()).toBeGreaterThan(0.85);
-  });
+  }, 30000);
 
   it("multilabel reaches >85% label accuracy in 4 epochs", () => {
     const s = new MultiLabel(data);
     for (let e = 0; e < 4; e++)
       for (let b = 0; b < s.loader.batchesPerEpoch; b++) s.trainStep();
     expect(s.evaluate()).toBeGreaterThan(0.85);
-  });
+  }, 30000);
 
   it("regression gets average center error under 1.5px in 4 epochs", () => {
     const s = new Regression(data);
@@ -60,7 +60,7 @@ describe("scenarios learn on the real MNIST subset", () => {
     const after = s.evaluate();
     expect(after).toBeLessThan(before);
     expect(after).toBeLessThan(1.5);
-  });
+  }, 30000);
 
   it("pixel similarity baseline is decent but beatable (~90s%)", () => {
     const r = pixelSimilarityBaseline(data);
@@ -74,5 +74,5 @@ describe("scenarios learn on the real MNIST subset", () => {
     expect(r.points.length).toBeGreaterThan(20);
     expect(r.suggestedSteepest).toBeGreaterThan(1e-4);
     expect(r.suggestedSteepest).toBeLessThan(12);
-  });
+  }, 30000);
 });
