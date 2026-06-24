@@ -1,2 +1,5 @@
 name = "dl-world"
-pages_build_output_dir = "dist"
+compatibility_date = "2026-06-24"
+
+[assets]
+directory = "./dist"
